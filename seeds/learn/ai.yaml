@@ -1,0 +1,71 @@
+slug: ai
+name: AI
+position: 3
+nodes:
+  - slug: ml-vs-rules
+    title: What machine learning is
+    summary: Learning from data versus writing rules, and the train/test split idea.
+  - slug: neural-nets
+    title: Neural networks
+    summary: Weights, activations, loss, and gradient descent without the calculus fog.
+    after: [ml-vs-rules]
+  - slug: embeddings
+    title: Embeddings
+    summary: Meaning as geometry, why similar things end up near each other in vector space.
+    after: [neural-nets]
+  - slug: transformers
+    title: Transformers and attention
+    summary: The architecture behind everything, attention as learned soft lookup.
+    after: [neural-nets, embeddings]
+  - slug: llm-training
+    title: How LLMs are trained
+    summary: Pretraining, fine-tuning, and RLHF, and what each stage buys.
+    after: [transformers]
+  - slug: scaling-laws
+    title: Scaling laws
+    summary: Why bigger got better, compute-optimal training, and the data wall debate.
+    after: [llm-training]
+  - slug: inference
+    title: Inference and serving
+    summary: Tokens, KV cache, batching, and why serving cost shapes products.
+    after: [transformers]
+  - slug: prompting-context
+    title: Prompting and context windows
+    summary: What context actually is and why retrieval beats stuffing.
+    after: [inference]
+  - slug: rag
+    title: Retrieval-augmented generation
+    summary: Chunking, vector search, and grounding models in your own data.
+    after: [prompting-context, embeddings]
+  - slug: agents
+    title: Agents and tool use
+    summary: Models that call tools in a loop, and why reliability is the hard part.
+    after: [prompting-context]
+  - slug: evals
+    title: Evals
+    summary: How anyone knows a model or agent got better, benchmarks versus task evals.
+    after: [agents]
+  - slug: fine-tuning-when
+    title: When to fine-tune
+    summary: Prompting versus RAG versus fine-tuning, the decision tree most teams get wrong.
+    after: [rag]
+  - slug: multimodal
+    title: Multimodal models
+    summary: How image, audio, and video get tokenized into the same machinery.
+    after: [transformers]
+  - slug: open-vs-closed
+    title: Open versus closed models
+    summary: Llama and friends versus frontier labs, and what open weights do to the market.
+    after: [llm-training]
+  - slug: ai-lab-map
+    title: Map the AI landscape
+    summary: OpenAI, Anthropic, Google DeepMind, Meta, xAI, Mistral, and who is positioned where.
+    after: [open-vs-closed]
+  - slug: ai-safety
+    title: AI safety and alignment basics
+    summary: What alignment means concretely, interpretability, and the policy landscape.
+    after: [ai-lab-map]
+  - slug: ai-in-bio
+    title: AI in biology
+    summary: AlphaFold, protein language models, and where ML actually helps drug discovery.
+    after: [rag, ai-lab-map]

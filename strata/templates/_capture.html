@@ -1,0 +1,9 @@
+<form id="capture" hx-post="/capture" hx-target="#capture" hx-swap="outerHTML" autocomplete="off">
+  {% if capture_from_home %}<input type="hidden" name="from_home" value="1">{% endif %}
+  <input type="text" name="title" placeholder="jot something down, sort it later"
+         {% if capture_autofocus %}autofocus{% endif %}>
+  <label class="chk"><input type="checkbox" name="nuisance" value="1"> frog</label>
+  <button type="submit">jot</button>
+  {% if captured %}<span class="ok">jotted</span>{% endif %}
+  {% if inbox_count %}<a class="badge" href="/now">{{ inbox_count }} in inbox</a>{% endif %}
+</form>

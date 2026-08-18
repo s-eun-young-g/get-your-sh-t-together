@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}import - strata{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>import</h2>
+  <p class="empty">
+    bring in your learning chats from chatgpt or claude. neither has a live api for
+    chat history, so this works from their official exports, and both arrive as a zip
+    you can upload here whole (or just the conversations.json inside).
+  </p>
+  <ul class="plain">
+    <li><span class="chip">chatgpt</span> <span class="empty">settings, data controls, export data</span></li>
+    <li><span class="chip">claude</span> <span class="empty">settings, privacy, export data</span></li>
+  </ul>
+  <form class="add" method="post" action="/learn/import/upload" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".json,.zip" required>
+    <button type="submit">upload</button>
+  </form>
+  {% if msg %}<p class="ok">{{ msg }}</p>{% endif %}
+</section>
+
+{% if chats %}
+<section class="card">
+  <form class="add" method="get" action="/learn/import">
+    <input type="text" name="q" value="{{ q }}" placeholder="filter by title">
+    <button type="submit" class="quiet">filter</button>
+  </form>
+
+  <form method="post" action="/learn/import/act">
+    <input type="hidden" name="q" value="{{ q }}">
+    <ul class="tasks">
+      {% for c in chats %}
+      <li>
+        <label class="chk pick">
+          <input type="checkbox" name="chat_ids" value="{{ c['id'] }}">
+          <span>{{ c['title'] }}</span>
+        </label>
+        {% if c['chat_created'] %}<span class="age">{{ c['chat_created'] }}</span>{% endif %}
+        {% if c['digest'] %}<span class="summary">{{ c['digest'][:120] }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="row actions">
+      {% if ai_enabled %}
+      <button type="submit" name="action" value="map">map selected with Claude</button>
+      {% else %}
+      <span class="empty">set anthropic_api_key to map chats onto your trees automatically.</span>
+      {% endif %}
+      <label class="chk">or add to
+        <select name="track_id">
+          {% for t in tracks %}<option value="{{ t['id'] }}">{{ t['name'] }}</option>{% endfor %}
+        </select>
+      </label>
+      <button type="submit" name="action" value="add" class="quiet">add as items</button>
+      <button type="submit" name="action" value="dismiss" class="quiet danger">dismiss selected</button>
+    </div>
+  </form>
+</section>
+{% endif %}
+
+<p><a class="quiet-link" href="/learn">back to learn</a></p>
+{% endblock %}

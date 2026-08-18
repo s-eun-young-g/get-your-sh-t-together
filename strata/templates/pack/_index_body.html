@@ -1,0 +1,59 @@
+<section class="card">
+  <h2>new {{ noun }}</h2>
+  <form class="stack" hx-post="/pack/trips" autocomplete="off">
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <input type="text" name="name" placeholder="{{ noun }} name" required>
+    {% if templates %}
+    <div class="chk-row">
+      {% for t in templates %}
+      <label class="chk"><input type="checkbox" name="template_ids" value="{{ t['row']['id'] }}"> {{ t['row']['name'] }}</label>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <button type="submit">{{ 'start packing' if kind == 'pack' else 'start the run' }}</button>
+  </form>
+</section>
+
+{% if trips %}
+<section class="card">
+  <h2>{{ noun }}s</h2>
+  <ul class="plain">
+    {% for tr in trips %}
+    <li>
+      <a href="/pack/trips/{{ tr['id'] }}">{{ tr['name'] }}</a>
+      {% if tr['status'] == 'active' %}<span class="age">{{ tr['unchecked'] }} left</span>
+      {% else %}<span class="age">closed</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>Templates</h2>
+  <form class="add" hx-post="/pack/templates" hx-target="#pack-body" autocomplete="off">
+    <input type="hidden" name="kind" value="{{ kind }}">
+    <input type="text" name="name" placeholder="{{ 'new template' if kind == 'pack' else 'new list' }}">
+  </form>
+  {% for t in templates %}
+  <details class="drawer">
+    <summary>{{ t['row']['name'] }} <span class="badge">{{ t['items'] | length }}</span>
+      <button class="quiet danger" hx-post="/pack/templates/{{ t['row']['id'] }}/delete" hx-target="#pack-body"
+              hx-confirm="delete {{ t['row']['name'] }}? past {{ noun }}s keep their lists.">delete</button>
+    </summary>
+    <ul class="tasks">
+      {% for i in t['items'] %}
+      <li>
+        <span>{{ i['label'] }}</span>
+        <span class="row-actions">
+          <button class="quiet danger" hx-post="/pack/template-items/{{ i['id'] }}/delete" hx-target="#pack-body">drop</button>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    <form class="add" hx-post="/pack/templates/{{ t['row']['id'] }}/items" hx-target="#pack-body" autocomplete="off">
+      <input type="text" name="label" placeholder="add item">
+    </form>
+  </details>
+  {% endfor %}
+</section>

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}settings - strata{% endblock %}
+{% block capture %}{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Make it yours</h2>
+  <p class="empty">switch on the life sections that match your life. work areas (one per job, school, or side gig) are added and named on the <a href="/work">work</a> page. nothing is deleted when you switch a section off; it just leaves the screen.</p>
+  <form class="stack" method="post" action="/settings">
+    <label class="field">Your name
+      <input type="text" name="name" value="{{ prefs.get('name', '') }}" placeholder="used to say hi on the home page">
+    </label>
+    <label class="field">Your horizon
+      <textarea name="manifesto" rows="4" class="manifesto-input"
+        placeholder="a few lines on where all this is going. shown on the home page to keep you pointed at it.">{{ prefs.get('manifesto', '') }}</textarea>
+    </label>
+
+    <h2>Life sections</h2>
+    <div class="toggle-row">
+      <label class="chk"><input type="checkbox" name="mod_routines" value="1"
+        {{ 'checked' if prefs.get('mod_routines', '1') == '1' }}> routines</label>
+      <span class="empty">recurring upkeep (meds refills, laundry, dentist) that resurfaces when due</span>
+    </div>
+    <div class="toggle-row">
+      <label class="chk"><input type="checkbox" name="mod_evenings" value="1"
+        {{ 'checked' if prefs.get('mod_evenings', '1') == '1' }}> evening plans</label>
+      <span class="empty">loose after-work lists with time blocks</span>
+    </div>
+    <div class="toggle-row">
+      <label class="chk"><input type="checkbox" name="mod_packing" value="1"
+        {{ 'checked' if prefs.get('mod_packing', '1') == '1' }}> packing</label>
+      <span class="empty">reusable templates, fresh checklist per trip</span>
+    </div>
+    <div class="toggle-row">
+      <label class="chk"><input type="checkbox" name="mod_finance" value="1"
+        {{ 'checked' if prefs.get('mod_finance', '1') == '1' }}> bills and renewals</label>
+      <span class="empty">date-anchored money things; paying advances the date</span>
+    </div>
+    <div class="toggle-row">
+      <label class="chk"><input type="checkbox" name="mod_appointments" value="1"
+        {{ 'checked' if prefs.get('mod_appointments', '1') == '1' }}> appointments</label>
+      <span class="empty">needs-booking versus booked, so nothing slips between</span>
+    </div>
+    <div class="toggle-row">
+      <label class="chk"><input type="checkbox" name="mod_meals" value="1"
+        {{ 'checked' if prefs.get('mod_meals', '1') == '1' }}> grocery lists</label>
+      <span class="empty">reusable lists, fresh checklist per run, like packing</span>
+    </div>
+
+    <h2>Other</h2>
+    <div class="toggle-row">
+      <label class="chk"><input type="checkbox" name="mod_pause" value="1"
+        {{ 'checked' if prefs.get('mod_pause', '1') == '1' }}> pause</label>
+      <span class="empty">park impulses behind a timer, then decide on purpose</span>
+    </div>
+
+    <button type="submit">save</button>
+    {% if request.query_params.get('saved') %}<span class="ok">saved</span>{% endif %}
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% for p in pending %}
+<section class="card frog-card">
+  <h2>You tried: {{ p['title'] }}</h2>
+  <p class="empty">did it help at all, even a little, even forced?</p>
+  <div class="row actions">
+    <button hx-post="/rescue/items/{{ p['id'] }}/outcome" hx-vals='{"helped":1}' hx-target="#rescue-body">it helped</button>
+    <button class="quiet" hx-post="/rescue/items/{{ p['id'] }}/outcome" hx-vals='{"helped":0}' hx-target="#rescue-body">not this time</button>
+  </div>
+</section>
+{% endfor %}
+
+{% if suggestion %}
+<section class="card blitz-card rescue-card">
+  <h2>Try this</h2>
+  <p class="blitz-title">{{ suggestion['title'] }}</p>
+  <p class="age">{{ suggestion['record'] }}</p>
+  {% if suggestion['helped'] %}
+  <p class="empty">this has genuinely worked before. the record says so.</p>
+  {% else %}
+  <p class="empty">you do not have to want to. just start it.</p>
+  {% endif %}
+  <div class="row actions">
+    <button hx-post="/rescue/items/{{ suggestion['id'] }}/try" hx-target="#rescue-body">trying it</button>
+    <button class="quiet" hx-post="/rescue/items/{{ suggestion['id'] }}/skip" hx-target="#rescue-body">not this</button>
+  </div>
+</section>
+{% elif not pending %}
+<section class="card">
+  <h2>Your rescue list</h2>
+  <p class="empty">fill this on a good day: things that have ever cut through the nothing, even once. future you, on the couch at 9pm feeling flat, will not be able to think of a single one. this list remembers instead.</p>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>The list</h2>
+  {% if items %}
+  <ul class="tasks">
+    {% for i in items %}
+    <li>
+      <span>{{ i['title'] }}</span>
+      <span class="age">{{ i['record'] }}</span>
+      <span class="row-actions">
+        <button class="quiet danger" hx-post="/rescue/items/{{ i['id'] }}/retire" hx-target="#rescue-body">retire</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if unused_presets %}
+  <details class="more">
+    <summary>add common ones</summary>
+    <div class="chk-row">
+      {% for key, title in unused_presets %}
+      <button class="quiet" hx-post="/rescue/preset" hx-vals='{"key":"{{ key }}"}'
+              hx-target="#rescue-body">{{ title }}</button>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+  <form class="add" hx-post="/rescue/items" hx-target="#rescue-body" autocomplete="off">
+    <input type="text" name="title" placeholder="add something that has ever helped, even once">
+  </form>
+</section>
+
+{% if stats['tries'] %}
+<p class="momentum">
+  forcing it has helped {{ stats['helped'] }} of {{ stats['tries'] }} time{{ '' if stats['tries'] == 1 else 's' }}.
+  proof that "nothing will help" is a liar.
+</p>
+{% endif %}

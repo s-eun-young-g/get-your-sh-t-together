@@ -1,0 +1,66 @@
+slug: hardware
+name: Hardware and chips
+position: 1
+nodes:
+  - slug: transistors-to-gates
+    title: From transistors to logic gates
+    summary: How a switch becomes AND, OR, and NOT, the atoms of every chip.
+  - slug: binary-and-data
+    title: Binary, bits, and how data is represented
+    summary: Integers, floats, and why floating point precision matters for AI chips.
+  - slug: cpu-anatomy
+    title: Anatomy of a CPU
+    summary: ALU, registers, clock, instruction pipeline, and what a core actually is.
+    after: [transistors-to-gates, binary-and-data]
+  - slug: memory-hierarchy
+    title: The memory hierarchy
+    summary: Registers, cache levels, RAM, and disk, and why locality dominates performance.
+    after: [cpu-anatomy]
+  - slug: isa
+    title: Instruction set architectures
+    summary: x86 versus ARM versus RISC-V, and why Apple silicon was a big deal.
+    after: [cpu-anatomy]
+  - slug: gpus
+    title: Why GPUs win at parallel work
+    summary: SIMD, thousands of small cores, and what makes matrix multiplication fast.
+    after: [cpu-anatomy, memory-hierarchy]
+  - slug: ai-accelerators
+    title: AI accelerators
+    summary: Nvidia's CUDA moat, TPUs, and the H100/B200 generation in plain terms.
+    after: [gpus]
+  - slug: memory-bandwidth
+    title: Memory bandwidth and HBM
+    summary: Why AI is memory bound and what high bandwidth memory changes.
+    after: [gpus, memory-hierarchy]
+  - slug: chip-fabrication
+    title: How chips are made
+    summary: Wafers, photolithography, process nodes, and what 3nm actually means.
+    after: [transistors-to-gates]
+  - slug: semi-supply-chain
+    title: The semiconductor supply chain
+    summary: TSMC, ASML, foundry versus fabless, and why one Dutch company matters so much.
+    after: [chip-fabrication]
+  - slug: chip-geopolitics
+    title: Chip geopolitics
+    summary: Export controls, the CHIPS Act, and Taiwan risk in one sitting.
+    after: [semi-supply-chain]
+  - slug: moores-law
+    title: Moore's law and what comes after
+    summary: Scaling history, why it slowed, and chiplets, packaging, and specialization as the response.
+    after: [chip-fabrication]
+  - slug: interconnects
+    title: Networking and interconnects
+    summary: NVLink, InfiniBand, and why GPU clusters are a networking problem.
+    after: [ai-accelerators]
+  - slug: datacenters
+    title: Datacenter economics
+    summary: Power, cooling, and capex, and why AI compute is measured in gigawatts now.
+    after: [interconnects]
+  - slug: edge-and-mobile
+    title: Edge and mobile silicon
+    summary: Phone SoCs, neural engines, and the tradeoffs of running models on-device.
+    after: [isa, ai-accelerators]
+  - slug: semi-industry-map
+    title: Map the public semi companies
+    summary: Nvidia, AMD, Intel, TSMC, ASML, Broadcom, and what each actually sells.
+    after: [semi-supply-chain, ai-accelerators]

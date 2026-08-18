@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}strata{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400..700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <script>
+    // Shared stop-slider behavior: a range input with data-stops (JSON list of
+    // [value, label] pairs) drives the sibling output and hidden field.
+    document.addEventListener("input", function (e) {
+      var r = e.target;
+      if (!r.matches || !r.matches('input[type="range"][data-stops]')) return;
+      var stop = JSON.parse(r.dataset.stops)[parseInt(r.value, 10)];
+      var out = r.closest(".stops").querySelector("output");
+      if (out) out.textContent = stop[1];
+    });
+    document.addEventListener("change", function (e) {
+      var r = e.target;
+      if (!r.matches || !r.matches('input[type="range"][data-stops]')) return;
+      var stop = JSON.parse(r.dataset.stops)[parseInt(r.value, 10)];
+      var hidden = r.closest(".stops").querySelector('input[type="hidden"]');
+      if (hidden && hidden.value !== String(stop[0])) {
+        hidden.value = stop[0];
+        hidden.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+    // Quick date picks: a data-days button fills its sibling date input.
+    document.addEventListener("click", function (e) {
+      var b = e.target;
+      if (!b.matches || !b.matches("button[data-days]")) return;
+      var input = b.closest(".datepick").querySelector('input[name="due_date"]');
+      var d = new Date();
+      d.setDate(d.getDate() + parseInt(b.dataset.days, 10));
+      input.value = d.toISOString().slice(0, 10);
+    });
+    // Confirmations without the browser popup: destructive buttons arm on
+    // first click ("sure?") and fire on the second. Reverts after 3.5s.
+    document.addEventListener("htmx:confirm", function (e) {
+      if (!e.detail.question) return;
+      e.preventDefault();
+      var el = e.detail.elt;
+      if (el.dataset.armed) {
+        delete el.dataset.armed;
+        el.textContent = el.dataset.origLabel;
+        el.classList.remove("armed");
+        e.detail.issueRequest(true);
+        return;
+      }
+      el.dataset.armed = "1";
+      el.dataset.origLabel = el.textContent;
+      el.textContent = "sure?";
+      el.classList.add("armed");
+      setTimeout(function () {
+        if (el.dataset.armed) {
+          delete el.dataset.armed;
+          el.textContent = el.dataset.origLabel;
+          el.classList.remove("armed");
+        }
+      }, 3500);
+    });
+
+    // Required fields without the browser bubble: a quiet hint appears under
+    // the field, only after an incomplete submit.
+    function strataNovalidate(root) {
+      (root.querySelectorAll ? root.querySelectorAll("form") : []).forEach(function (f) {
+        f.setAttribute("novalidate", "");
+      });
+    }
+    document.addEventListener("DOMContentLoaded", function () { strataNovalidate(document); });
+    document.addEventListener("htmx:load", function (e) { strataNovalidate(e.detail.elt); });
+    document.addEventListener("submit", function (e) {
+      var form = e.target;
+      if (!form.matches || !form.matches("form") || form.checkValidity()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      form.querySelectorAll(":invalid").forEach(function (el) {
+        el.classList.add("invalid");
+        if (!el.nextElementSibling || !el.nextElementSibling.matches(".field-hint")) {
+          var hint = document.createElement("span");
+          hint.className = "field-hint";
+          hint.textContent = "fill this out";
+          el.insertAdjacentElement("afterend", hint);
+        }
+        el.addEventListener("input", function fix() {
+          if (el.checkValidity()) {
+            el.classList.remove("invalid");
+            if (el.nextElementSibling && el.nextElementSibling.matches(".field-hint")) {
+              el.nextElementSibling.remove();
+            }
+            el.removeEventListener("input", fix);
+          }
+        });
+      });
+    }, true);
+  </script>
+</head>
+<body class="page-{{ request.url.path.split('/')[1] or 'home' }}">
+  <header class="top">
+    <a class="wordmark" href="/">strata</a>
+    {% set path = request.url.path %}
+    <nav>
+      <a href="/work" class="{{ 'active' if path.startswith('/work') }}">work</a>
+      {% if prefs.get('mod_evenings', '1') == '1' or prefs.get('mod_packing', '1') == '1'
+            or prefs.get('mod_routines', '1') == '1' or prefs.get('mod_finance', '1') == '1'
+            or prefs.get('mod_appointments', '1') == '1' or prefs.get('mod_meals', '1') == '1' %}
+      <a href="/life" class="{{ 'active' if path.startswith('/life') or path.startswith('/pack') }}">life</a>
+      {% endif %}
+      <a href="/model" class="{{ 'active' if path.startswith('/model') }}">model</a>
+      <a href="/learn" class="{{ 'active' if path.startswith('/learn') }}">learn</a>
+      {% if prefs.get('mod_pause', '1') == '1' %}
+      <a href="/pause" class="{{ 'active' if path.startswith('/pause') }}">pause</a>
+      {% endif %}
+      <a href="/settings" class="dim {{ 'active' if path.startswith('/settings') }}">settings</a>
+    </nav>
+    {% if auth_enabled %}
+    <form method="post" action="/logout"><button class="quiet" type="submit">log out</button></form>
+    {% endif %}
+  </header>
+  <main>
+    {% block capture %}
+    <div class="capture-slot">{% include "_capture.html" %}</div>
+    {% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

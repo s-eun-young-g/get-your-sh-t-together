@@ -1,0 +1,96 @@
+{% if manifesto %}
+<blockquote class="manifesto">{{ manifesto }}</blockquote>
+{% else %}
+<form class="stack manifesto-compose" hx-post="/manifesto" hx-target="#home-blocks" autocomplete="off">
+  <textarea name="manifesto" rows="2" class="manifesto-input"
+            placeholder="your horizon: a few lines on where all this is going. it lives here."></textarea>
+  <button type="submit">set it</button>
+</form>
+{% endif %}
+
+{% if daily_nuisance %}
+<section class="card frog-card">
+  <h2>Eat the frog</h2>
+  <div class="row">
+    <button class="tick" hx-post="/now/tasks/{{ daily_nuisance['id'] }}/done"
+            hx-vals='{"frame":"home"}' hx-target="#home-blocks" aria-label="done"></button>
+    <span class="frog-title">{{ daily_nuisance['title'] }}</span>
+    <span class="age">waiting {{ daily_nuisance['created_at'] | age_days }}d</span>
+  </div>
+  <div class="row actions">
+    <button class="quiet" hx-post="/now/tasks/{{ daily_nuisance['id'] }}/snooze"
+            hx-vals='{"frame":"home","days":1}' hx-target="#home-blocks">not today</button>
+    <a class="quiet-link" href="/now/blitz">blitz the rest</a>
+  </div>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>Today</h2>
+  {% if today_items %}
+  <ul class="tasks">
+    {% for i in today_items %}
+    <li>
+      <button class="tick" hx-post="{{ i['post'] }}" hx-vals='{"frame":"home"}' hx-target="#home-blocks" aria-label="done"></button>
+      <span>{{ i['title'] }}</span>
+      <span class="chip chip-hue-{{ i['hue'] }}">{{ i['chip'] | lower }}</span>
+      {% if i['meta'] %}<span class="age">{{ i['meta'] }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">nothing up next.</p>
+  {% endif %}
+  {% if stale_count %}
+  <p><button class="quiet" hx-post="/now/sweep" hx-target="#home-blocks">sweep {{ stale_count }} stale pinned item{{ '' if stale_count == 1 else 's' }} back to inbox</button></p>
+  {% endif %}
+</section>
+
+<details class="drawer">
+  <summary>Frog pen <span class="badge">{{ nuisances | length }}</span>
+    {% if nuisances %}<a class="quiet-link" href="/now/blitz">blitz</a>{% endif %}
+  </summary>
+  {% if nuisances %}
+  <ul class="tasks">
+    {% for t in nuisances %}
+    <li>
+      <button class="tick" hx-post="/now/tasks/{{ t['id'] }}/done" hx-vals='{"frame":"home"}' hx-target="#home-blocks" aria-label="done"></button>
+      <span>{{ t['title'] }}</span>
+      <span class="age">waiting {{ t['created_at'] | age_days }}d{% if t['snoozed_until'] %}, snoozed to {{ t['snoozed_until'] }}{% endif %}</span>
+      <span class="row-actions">
+        <button class="quiet" hx-post="/now/tasks/{{ t['id'] }}/pin" hx-vals='{"frame":"home"}' hx-target="#home-blocks">{{ 'unpin' if t['pinned'] else 'pin' }}</button>
+        <button class="quiet" hx-post="/now/tasks/{{ t['id'] }}/snooze" hx-vals='{"frame":"home","days":3}' hx-target="#home-blocks">snooze 3d</button>
+        <button class="quiet" hx-post="/now/tasks/{{ t['id'] }}/nuisance" hx-vals='{"frame":"home"}' hx-target="#home-blocks">unfrog</button>
+        <button class="quiet danger" hx-post="/now/tasks/{{ t['id'] }}/delete" hx-vals='{"frame":"home"}' hx-target="#home-blocks">drop</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">empty.</p>
+  {% endif %}
+  <form class="add" hx-post="/now/tasks" hx-target="#home-blocks" autocomplete="off">
+    <input type="hidden" name="horizon" value="inbox">
+    <input type="hidden" name="nuisance" value="1">
+    <input type="hidden" name="frame" value="home">
+    <input type="text" name="title" placeholder="add a frog">
+  </form>
+</details>
+
+<div class="grid2 tiles">
+  {% for tile in tiles %}
+  <a class="card tile tile-{{ tile['label'] }}" href="{{ tile['href'] }}">
+    <h2>{{ tile['label'] }}</h2>
+    <p class="tile-big">{{ tile['big'] }}</p>
+    {% if tile['pct'] is not none %}
+    <div class="progress"><i style="width: {{ tile['pct'] }}%"></i></div>
+    {% endif %}
+    <p class="tile-sub">{{ tile['sub'] }}</p>
+  </a>
+  {% endfor %}
+</div>
+
+<p class="momentum">
+  {{ momentum['done_today'] }} done today{% if momentum['nuisances_week'] %},
+  {{ momentum['nuisances_week'] }} frog{{ '' if momentum['nuisances_week'] == 1 else 's' }} cleared this week{% endif %}.
+</p>

@@ -1,0 +1,62 @@
+slug: startup
+name: Startup ecosystem
+position: 4
+nodes:
+  - slug: startup-vocab
+    title: Core startup vocabulary
+    summary: PMF, TAM, runway, pivot, moat, and the words everyone uses without defining.
+  - slug: business-models
+    title: SaaS and marketplace business models
+    summary: Subscriptions, usage pricing, take rates, and why software margins are special.
+    after: [startup-vocab]
+  - slug: sales-motions
+    title: How software gets sold
+    summary: PLG versus sales-led, bottom-up adoption, and why devtools grow differently.
+    after: [business-models]
+  - slug: dev-stack-tour
+    title: Tour the modern dev stack
+    summary: GitHub for code, Vercel for deploys, and where CI/CD fits, try each in one sitting.
+  - slug: internal-tools-stack
+    title: The company operations stack
+    summary: Linear for issues, Notion for docs, Slack for comms, Figma for design, why teams pick these.
+    after: [dev-stack-tour]
+  - slug: fintech-ops-stack
+    title: The money ops stack
+    summary: Ramp and Brex for spend, Stripe for payments, Mercury for banking, Carta for equity.
+    after: [business-models]
+  - slug: ai-infra-stack
+    title: The AI infra stack
+    summary: Weights and Biases for experiments, Braintrust for evals, Modal for compute, when each enters the picture.
+    after: [dev-stack-tour]
+  - slug: infra-economics
+    title: Why infra companies win
+    summary: AWS, Snowflake, and Databricks, and the economics of selling picks and shovels.
+    after: [dev-stack-tour, business-models]
+  - slug: accelerators
+    title: YC and the accelerator world
+    summary: What Y Combinator actually does, demo days, and the standard deal.
+    after: [startup-vocab]
+  - slug: vc-firm-map
+    title: Map the major VC firms
+    summary: Sequoia, a16z, Benchmark, Founders Fund, and each firm's style and famous bets.
+    after: [accelerators]
+  - slug: startup-people
+    title: Names to know
+    summary: The founders and investors who keep coming up, build a personal cheat sheet.
+    after: [vc-firm-map]
+  - slug: tech-news-diet
+    title: Build a tech news diet
+    summary: Pick two or three sources (for example Stratechery, TechCrunch, a newsletter) and hold a two week streak.
+    after: [startup-people]
+  - slug: hiring-equity
+    title: Startup jobs and equity
+    summary: Options, vesting, cliffs, and how to evaluate an offer at each stage.
+    after: [startup-vocab]
+  - slug: gtm-case-study
+    title: Do one go-to-market case study
+    summary: Trace how one company you use (Ramp, Linear, or Vercel) actually got its first thousand customers.
+    after: [sales-motions, internal-tools-stack]
+  - slug: startup-failure
+    title: Why startups die
+    summary: Post-mortems, running out of money versus running out of belief, and common patterns.
+    after: [gtm-case-study]

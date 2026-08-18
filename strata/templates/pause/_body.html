@@ -1,0 +1,96 @@
+<section class="card">
+  <h2>Catch an impulse</h2>
+  <p class="empty">I know you want to do it. but should you?</p>
+  <form class="stack" hx-post="/pause/impulses" hx-target="#pause-body" autocomplete="off">
+    <input type="text" name="title" placeholder="the thing" required>
+    <div class="oneline">
+      <span class="stops">
+        <span class="chk">wait</span>
+        <input type="range" id="wait-range" min="0" max="{{ wait_stops | length - 1 }}"
+               value="{{ default_stop }}" step="1" data-stops='{{ wait_stops | tojson }}'>
+        <output>{{ wait_stops[default_stop][1] }}</output>
+        <input type="hidden" name="wait_minutes" value="{{ wait_stops[default_stop][0] }}">
+      </span>
+      <span class="seg">
+        {% for key, label in categories %}
+        <label><input type="radio" name="category" value="{{ key }}" {{ 'checked' if key == 'shopping' }}><span>{{ label }}</span></label>
+        {% endfor %}
+      </span>
+      <button type="submit">park it</button>
+    </div>
+  </form>
+</section>
+
+{% if waiting %}
+<section class="card">
+  <h2>Parked</h2>
+  <ul class="tasks">
+    {% for i in waiting %}
+    <li>
+      <span>{{ i['title'] }}</span>
+      <span class="chip">{{ i['category'] }}</span>
+      {% if i['ready'] %}<span class="chip chip-l">still want it?</span>
+      {% else %}<span class="age">{{ i['wait_label'] }}</span>{% endif %}
+      <span class="row-actions">
+        <button class="quiet" hx-post="/pause/impulses/{{ i['id'] }}/release" hx-target="#pause-body">let it go</button>
+        <button class="quiet" hx-post="/pause/impulses/{{ i['id'] }}/act" hx-target="#pause-body">I didn't wait</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if unlogged %}
+<section class="card">
+  <h2>How did it go?</h2>
+  <p class="empty">you acted on these. honest answers make the timers smarter than willpower.</p>
+  <ul class="tasks">
+    {% for i in unlogged %}
+    <li>
+      <span>{{ i['title'] }}</span>
+      <span class="chip">{{ i['category'] }}</span>
+      <span class="row-actions">
+        <button class="quiet" hx-post="/pause/impulses/{{ i['id'] }}/regret" hx-vals='{"regret":0}' hx-target="#pause-body">worth it</button>
+        <button class="quiet" hx-post="/pause/impulses/{{ i['id'] }}/regret" hx-vals='{"regret":1}' hx-target="#pause-body">regretted it</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if released or acted_log %}
+<section class="card">
+  <h2>the record</h2>
+  {% if released %}
+  <details class="more completed">
+    <summary class="reveal"><span class="when-closed">show let go ({{ released | length }})</span><span class="when-open">hide let go</span></summary>
+    <ul class="tasks done-list">
+      {% for i in released %}<li class="checked"><span>{{ i['title'] }}</span><span class="chip">{{ i['category'] }}</span></li>{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+  {% if acted_log %}
+  <details class="more completed">
+    <summary class="reveal"><span class="when-closed">show didn't wait ({{ acted_log | length }})</span><span class="when-open">hide didn't wait</span></summary>
+    <ul class="tasks done-list">
+      {% for i in acted_log %}
+      <li class="checked"><span>{{ i['title'] }}</span><span class="chip">{{ i['category'] }}</span>
+        {% if i['regret'] == 1 %}<span class="age">regretted</span>{% elif i['regret'] == 0 %}<span class="age">worth it</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if stats['let_go'] or stats['acted'] %}
+<p class="momentum">
+  waiting killed {{ stats['let_go'] }} impulse{{ '' if stats['let_go'] == 1 else 's' }} for free.
+  you acted on {{ stats['acted'] }}{% if stats['regretted'] or stats['no_regret'] %},
+  and of the {{ stats['regretted'] + stats['no_regret'] }} you scored,
+  {{ stats['no_regret'] }} {{ 'was' if stats['no_regret'] == 1 else 'were' }} worth it{% endif %}.
+</p>
+{% endif %}

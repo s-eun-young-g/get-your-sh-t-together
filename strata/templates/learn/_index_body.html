@@ -1,0 +1,52 @@
+<div class="row spread learn-head">
+  <span>
+    {% if streak %}<span class="badge">{{ streak }} day streak</span>{% endif %}
+    {% if logged_today %}
+    <span class="ok">learned today</span>
+    {% else %}
+    <button class="quiet" hx-post="/learn/log-today" hx-target="#learn-body">I learned something today</button>
+    {% endif %}
+  </span>
+  <a class="quiet-link" href="/learn/import">import</a>
+</div>
+
+<div class="grid2">
+  {% for t in tracks %}
+  <section class="card tile-card">
+    <div class="row spread">
+      <h2><a href="/learn/tracks/{{ t['row']['id'] }}">{{ t['row']['name'] }}</a></h2>
+      <span class="age">{{ t['progress']['done'] }} of {{ t['progress']['total'] }}</span>
+    </div>
+    <div class="progress"><i style="width: {{ t['progress']['pct'] }}%"></i></div>
+
+    {% if t['headliner'] %}
+    {% set label, node = t['headliner'] %}
+    <p class="headliner">
+      <span class="chip {{ 'chip-l' if label == 'learning now' }}">{{ label }}</span>
+      {{ node['title'] }}
+    </p>
+    {% endif %}
+
+    {% if t['frontier'] %}
+    <details class="more">
+      <summary class="reveal"><span class="when-closed">show</span><span class="when-open">hide</span></summary>
+      <ul class="tasks">
+        {% for n in t['frontier'] %}
+        <li>
+          <button class="tick" hx-post="/learn/nodes/{{ n['id'] }}/done" hx-vals='{"frame":"learn"}'
+                  hx-target="#learn-body" aria-label="done"></button>
+          <span>{{ n['title'] }}</span>
+          <span class="row-actions">
+            <button class="quiet" hx-post="/learn/nodes/{{ n['id'] }}/focus" hx-vals='{"frame":"learn"}'
+                    hx-target="#learn-body">{{ 'unmark' if n['learning_now'] else 'learning now' }}</button>
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% else %}
+    <p class="empty">all caught up.</p>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>

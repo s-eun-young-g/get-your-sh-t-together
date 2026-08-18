@@ -1,0 +1,119 @@
+{% macro node_row(n, done) %}
+{% set nnotes = notes_by_node.get(n['id'], []) %}
+{% set nres = resources_by_node.get(n['id'], []) %}
+<li class="{{ 'checked' if done }}{{ ' unlocked' if not done and n['id'] in new_ids }}">
+  {% if done %}
+  <button class="tick on" hx-post="/learn/nodes/{{ n['id'] }}/undone" hx-target="#track-body" aria-label="undo"></button>
+  {% else %}
+  <button class="tick" hx-post="/learn/nodes/{{ n['id'] }}/done" hx-target="#track-body" aria-label="done"></button>
+  {% endif %}
+  <details class="node-more">
+    <summary class="item-title">{{ n['title'] }}
+      {% if nnotes or nres %}<span class="age">{{ nnotes | length }}n &middot; {{ nres | length }}s</span>{% endif %}
+      {% if n['learning_now'] and not done %}<span class="chip chip-l">learning now</span>{% endif %}
+    </summary>
+    <div class="node-detail">
+      {% if nnotes %}
+      <ul class="plain">
+        {% for note in nnotes %}
+        <li>
+          <span>{{ note['text'][:90] }}{{ '...' if note['text'] | length > 90 }}</span>
+          <button class="quiet danger" hx-post="/learn/notes/{{ note['id'] }}/delete" hx-target="#track-body">drop</button>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      <form class="add" hx-post="/learn/nodes/{{ n['id'] }}/note" hx-target="#track-body" autocomplete="off">
+        <input type="text" name="text" placeholder="add a note" required>
+        <button type="submit">add note</button>
+      </form>
+      {% if nres %}
+      <ul class="plain">
+        {% for r in nres %}
+        <li>
+          <span class="chip">{{ r['kind'] }}</span>
+          {% if r['url'] %}<a class="res-link" href="{{ r['url'] }}" target="_blank" rel="noopener">{{ r['title'] }}</a>
+          {% else %}<span>{{ r['title'] }}</span>{% endif %}
+          <button class="quiet danger" hx-post="/learn/resources/{{ r['id'] }}/delete" hx-target="#track-body">drop</button>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      <form class="add" hx-post="/learn/nodes/{{ n['id'] }}/resources" hx-target="#track-body" autocomplete="off">
+        <input type="text" name="title" placeholder="add a source" required>
+        <input type="text" name="url" placeholder="link (optional)">
+        <span class="seg">
+          {% for k in resource_kinds %}
+          <label><input type="radio" name="kind" value="{{ k }}" {{ 'checked' if k == 'article' }}><span>{{ k }}</span></label>
+          {% endfor %}
+        </span>
+        <button type="submit">add source</button>
+      </form>
+    </div>
+  </details>
+  {% if not done %}
+  <span class="row-actions">
+    <button class="quiet" hx-post="/learn/nodes/{{ n['id'] }}/focus" hx-target="#track-body">{{ 'unmark' if n['learning_now'] else 'learning now' }}</button>
+  </span>
+  {% endif %}
+</li>
+{% endmacro %}
+
+<p class="crumb"><a class="quiet-link" href="/learn">&larr; learn</a></p>
+<section class="card">
+  <div class="row spread">
+    <h1>{{ track['name'] }}</h1>
+    <span class="age">{{ counts['done'] }} of {{ counts['total'] }} done</span>
+  </div>
+  <div class="progress"><i style="width: {{ progress['pct'] }}%"></i></div>
+
+  <ul class="tasks">
+    {% for n in all_nodes if not n['done_at'] %}{{ node_row(n, False) }}{% endfor %}
+  </ul>
+
+  {% if all_nodes | selectattr('done_at') | list %}
+  <details class="more completed">
+    <summary class="reveal"><span class="when-closed">show completed</span><span class="when-open">hide completed</span></summary>
+    <ul class="tasks done-list">
+      {% for n in all_nodes if n['done_at'] %}{{ node_row(n, True) }}{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>grow this track</h2>
+  <form class="add" hx-post="/learn/tracks/{{ track['id'] }}/nodes" hx-target="#track-body" autocomplete="off">
+    <input type="text" name="title" placeholder="add something to learn" required>
+    <button type="submit">add</button>
+  </form>
+
+  {% if pending %}
+  <h3>suggested from your imports</h3>
+  <ul class="tasks">
+    {% for s in pending %}
+    {% set p = loads(s['payload']) %}
+    <li>
+      {% if p.get('kind') == 'done' %}
+      <span>mark done: {{ p.get('node_title', p.get('node_slug')) }}</span>
+      <span class="summary">you covered this already</span>
+      {% else %}
+      <span>{{ p['title'] }}</span>
+      {% if p['summary'] %}<span class="summary">{{ p['summary'] }}</span>{% endif %}
+      {% endif %}
+      <span class="row-actions">
+        <button class="quiet" hx-post="/learn/suggestions/{{ s['id'] }}/accept" hx-target="#track-body">add to list</button>
+        <button class="quiet danger" hx-post="/learn/suggestions/{{ s['id'] }}/dismiss" hx-target="#track-body">discard</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>notes</h2>
+  <textarea class="notes" name="notes" placeholder="notes for this track. it saves itself."
+            hx-post="/learn/tracks/{{ track['id'] }}/notes"
+            hx-trigger="keyup changed delay:800ms" hx-swap="none">{{ track['notes'] }}</textarea>
+</section>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ board['name'] }} - strata{% endblock %}
+{% block content %}
+<div class="row spread">
+  <h1>{{ board['name'] }}</h1>
+  <button class="quiet" hx-post="/model/boards/{{ board['id'] }}/archive"
+          hx-confirm="Archive this board?">archive</button>
+</div>
+
+<div id="columns">{% include "model/_columns.html" %}</div>
+
+<section class="card">
+  <h2>Notes</h2>
+  <textarea class="notes" name="notes" placeholder="think out loud here. it saves itself."
+            hx-post="/model/boards/{{ board['id'] }}/notes"
+            hx-trigger="keyup changed delay:800ms" hx-swap="none">{{ board['notes'] }}</textarea>
+</section>
+{% endblock %}

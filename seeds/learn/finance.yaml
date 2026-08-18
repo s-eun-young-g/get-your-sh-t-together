@@ -1,0 +1,82 @@
+slug: finance
+name: Finance and markets
+position: 0
+nodes:
+  - slug: time-value-of-money
+    title: Time value of money and compounding
+    summary: The single idea underneath all of finance, why a dollar today beats a dollar tomorrow.
+  - slug: reading-financial-statements
+    title: Read an income statement, balance sheet, and cash flow statement
+    summary: Pick one public company 10-K and trace how the three statements connect.
+  - slug: stocks-and-equity
+    title: What a stock actually is
+    summary: Ownership, voting, dilution, and why share price times share count is what matters.
+    after: [time-value-of-money]
+  - slug: bonds-and-rates
+    title: Bonds, yields, and interest rates
+    summary: Price versus yield, the yield curve, and why rates move everything else.
+    after: [time-value-of-money]
+  - slug: valuation-basics
+    title: Valuation basics, DCF and multiples
+    summary: Discounted cash flow intuition plus P/E, EV/EBITDA, and revenue multiples.
+    after: [reading-financial-statements, stocks-and-equity]
+  - slug: the-fed
+    title: The Fed and monetary policy
+    summary: FOMC, the dual mandate, QE and QT, and how policy hits markets and startups.
+    after: [bonds-and-rates]
+  - slug: market-structure
+    title: How markets actually work
+    summary: Exchanges, market makers, bid-ask spread, ETFs, and index funds.
+    after: [stocks-and-equity]
+  - slug: options-basics
+    title: Options basics
+    summary: Calls, puts, and why employees should understand strike prices and exercise windows.
+    after: [market-structure]
+  - slug: banking-101
+    title: What banks do
+    summary: Deposits, lending, capital requirements, and what commercial banks are for.
+    after: [bonds-and-rates]
+  - slug: investment-banking
+    title: What investment banks do
+    summary: Underwriting, M&A advisory, and where Goldman and Morgan Stanley fit in a deal.
+    after: [banking-101, valuation-basics]
+  - slug: private-markets-map
+    title: Map the private capital world
+    summary: Angels, VC, growth equity, PE, and hedge funds, who invests at what stage and why.
+    after: [investment-banking]
+  - slug: vc-mechanics
+    title: VC fund mechanics
+    summary: LPs and GPs, fund lifecycles, carry and management fees, and power law returns.
+    after: [private-markets-map]
+  - slug: startup-fundraising
+    title: How startup fundraising works
+    summary: Pre-seed through growth rounds, SAFEs versus priced rounds, valuation and dilution math.
+    after: [vc-mechanics]
+  - slug: term-sheets
+    title: Read a term sheet
+    summary: Liquidation preferences, pro rata, board seats, and the terms that actually bite.
+    after: [startup-fundraising]
+  - slug: cap-tables
+    title: Cap table math
+    summary: Build a toy cap table through two rounds and an exit, including an option pool.
+    after: [startup-fundraising]
+  - slug: exits
+    title: Exits, IPOs, and acquisitions
+    summary: How companies go public, direct listings, SPACs, and how M&A gets priced.
+    after: [term-sheets, investment-banking]
+  - slug: startup-metrics
+    title: Startup finance metrics
+    summary: ARR, burn multiple, CAC and LTV, net dollar retention, and rule of 40.
+    after: [startup-fundraising]
+  - slug: macro-literacy
+    title: Macro literacy
+    summary: Inflation, GDP, employment prints, and how to read a week of financial news.
+    after: [the-fed]
+  - slug: follow-the-market
+    title: Build a market-following habit
+    summary: Pick two sources (for example Matt Levine and a weekly market recap) and keep a two week streak.
+    after: [macro-literacy, market-structure]
+  - slug: biotech-finance
+    title: How biotech gets financed
+    summary: Why biotech companies IPO pre-revenue, milestone deals, licensing, and royalty models.
+    after: [exits, startup-metrics]

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}model - strata{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>Boards</h2>
+  <form class="add" hx-post="/model/boards" autocomplete="off">
+    <input type="text" name="name" placeholder="what are you figuring out?" required>
+  </form>
+  <ul class="tasks">
+    {% for b in boards %}
+    <li>
+      <a href="/model/boards/{{ b['id'] }}" class="res-link">{{ b['name'] }}</a>
+      <span class="age">{{ b['bucket_count'] }} buckets</span>
+      <span class="row-actions">
+        <button class="quiet" hx-post="/model/boards/{{ b['id'] }}/archive"
+                hx-confirm="archive {{ b['name'] }}?">archive</button>
+        <button class="quiet danger" hx-post="/model/boards/{{ b['id'] }}/delete"
+                hx-confirm="delete {{ b['name'] }} and everything on it? this cannot be undone.">delete</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

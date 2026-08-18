@@ -1,0 +1,271 @@
+{% if prefs.get('mod_routines', '1') == '1' %}
+<section class="card">
+  <div class="row spread"><h2>Routines</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_routines","on":0}' hx-target="#life-body" hx-confirm="Remove this section? Its data is kept and it can be added back.">remove</button></div>
+  {% if routines %}
+  <ul class="tasks">
+    {% for r in routines %}
+    <li>
+      <button class="tick" hx-post="/life/routines/{{ r['id'] }}/done" hx-target="#life-body" aria-label="done"></button>
+      <span>{{ r['name'] }}</span>
+      {% if r['due'] %}<span class="chip chip-l">due</span>
+      {% else %}<span class="age">{{ r['due_label'] }}</span>{% endif %}
+      <span class="age">every {{ r['every_days'] }}d</span>
+      <span class="row-actions">
+        <button class="quiet" hx-post="/life/routines/{{ r['id'] }}/pause" hx-target="#life-body">pause</button>
+        <button class="quiet danger" hx-post="/life/routines/{{ r['id'] }}/delete" hx-target="#life-body">drop</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  {% endif %}
+  {% if unused_presets %}
+  <details class="more">
+    <summary>add common ones</summary>
+    <div class="chk-row">
+      {% for key, name, days in unused_presets %}
+      <button class="quiet" hx-post="/life/routines/preset" hx-vals='{"key":"{{ key }}"}'
+              hx-target="#life-body">{{ name }} ({{ days }}d)</button>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+  <form class="add" hx-post="/life/routines" hx-target="#life-body" autocomplete="off">
+    <input type="text" name="name" placeholder="add your own">
+    <span class="stops">
+      <input type="range" min="0" max="{{ cadence_stops | length - 1 }}" value="{{ cadence_default }}"
+             data-stops='{{ cadence_stops | tojson }}'>
+      <output>{{ cadence_stops[cadence_default][1] }}</output>
+      <input type="hidden" name="every_days" value="{{ cadence_stops[cadence_default][0] }}">
+    </span>
+    <button type="submit">add</button>
+  </form>
+</section>
+{% endif %}
+
+{% if prefs.get('mod_finance', '1') == '1' %}
+<section class="card">
+  <div class="row spread"><h2>financials</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_finance","on":0}' hx-target="#life-body" hx-confirm="Remove this section? Its data is kept and it can be added back.">remove</button></div>
+
+  {% if bills_upcoming %}
+  <ul class="tasks">
+    {% for b in bills_upcoming %}
+    <li>
+      <button class="tick" hx-post="/life/bills/{{ b['id'] }}/paid" hx-target="#life-body" aria-label="paid"></button>
+      <span>{{ b['name'] }}</span>
+      {% if b['due'] %}<span class="chip chip-l">{{ b['due_label'] }}</span>
+      {% else %}<span class="age">{{ b['due_label'] }}</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">nothing coming up.</p>
+  {% endif %}
+
+  <details class="more completed">
+    <summary class="reveal"><span class="when-closed">show all recurring ({{ bills | length }})</span><span class="when-open">hide the list</span></summary>
+    <ul class="tasks done-list">
+      {% for b in bills %}
+      <li>
+        <span>{{ b['name'] }}</span>
+        <span class="age">{{ b['due_label'] }}, {% if b['every_months'] %}every {{ b['every_months'] }}mo{% else %}one time{% endif %}</span>
+        <span class="row-actions">
+          <button class="quiet danger" hx-post="/life/bills/{{ b['id'] }}/delete" hx-target="#life-body">drop</button>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+  <form class="add" hx-post="/life/bills" hx-target="#life-body" autocomplete="off">
+    <input type="text" name="name" placeholder="add a recurring charge or renewal" required>
+    <input type="text" name="next_due" class="who" placeholder="sep 1, 9/1, tomorrow..." required>
+    <span class="seg">
+      {% for v, label in bill_cadences %}
+      <label><input type="radio" name="every_months" value="{{ v }}" {{ 'checked' if v == 1 }}><span>{{ label }}</span></label>
+      {% endfor %}
+    </span>
+    <button type="submit">add</button>
+  </form>
+
+  <h3>cards</h3>
+  {% if cards %}
+  <ul class="tasks">
+    {% for c in cards %}
+    <li>
+      <span>{{ c['name'] }}</span>
+      {% if c['use_for'] %}<span class="summary">use for: {{ c['use_for'] }}</span>{% endif %}
+      {% if c['wins'] %}<span class="summary">wins: {{ c['wins'] }}</span>{% endif %}
+      <span class="row-actions">
+        <button class="quiet danger" hx-post="/life/cards/{{ c['id'] }}/delete" hx-target="#life-body">drop</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  {% endif %}
+  <form class="stack" hx-post="/life/cards" hx-target="#life-body" autocomplete="off">
+    <div class="oneline">
+      <input type="text" name="name" placeholder="card name" required>
+      <input type="text" name="use_for" placeholder="use it for">
+      <input type="text" name="wins" placeholder="biggest wins">
+      <button type="submit">add</button>
+    </div>
+  </form>
+</section>
+{% endif %}
+
+{% if prefs.get('mod_appointments', '1') == '1' %}
+<section class="card">
+  <div class="row spread"><h2>Appointments</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_appointments","on":0}' hx-target="#life-body" hx-confirm="Remove this section? Its data is kept and it can be added back.">remove</button></div>
+  {% if appointments['needs_booking'] %}
+  <ul class="tasks">
+    {% for a in appointments['needs_booking'] %}
+    <li>
+      <span>{{ a['title'] }}</span>
+      <span class="age">sitting {{ a['created_at'] | age_days }}d</span>
+      <span class="row-actions">
+        <form class="inline" hx-post="/life/appointments/{{ a['id'] }}/book" hx-target="#life-body">
+          <input type="text" name="when_at" class="who" placeholder="sep 1, 9/1, tomorrow..." required>
+          <button type="submit" class="quiet">booked it</button>
+        </form>
+        <button class="quiet danger" hx-post="/life/appointments/{{ a['id'] }}/delete" hx-target="#life-body">drop</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if appointments['booked'] %}
+  <ul class="tasks">
+    {% for a in appointments['booked'] %}
+    <li>
+      <button class="tick" hx-post="/life/appointments/{{ a['id'] }}/done" hx-target="#life-body" aria-label="done"></button>
+      <span>{{ a['title'] }}</span>
+      <span class="age">{{ a['when_at'] }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if not appointments['needs_booking'] and not appointments['booked'] %}
+  {% endif %}
+  <form class="add" hx-post="/life/appointments" hx-target="#life-body" autocomplete="off">
+    <input type="text" name="title" placeholder="add one">
+  </form>
+</section>
+{% endif %}
+
+{% if prefs.get('mod_meals', '1') == '1' %}
+<section class="card">
+  <div class="row spread"><h2>groceries</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_meals","on":0}' hx-target="#life-body" hx-confirm="Remove this section? Its data is kept and it can be added back.">remove</button></div>
+  {% if grocery_runs %}
+  <ul class="plain">
+    {% for tr in grocery_runs %}
+    <li><a href="/pack/trips/{{ tr['id'] }}" class="res-link">{{ tr['name'] }}</a>
+        <span class="age">{{ tr['unchecked'] }} left to get</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">no active runs.</p>
+  {% endif %}
+  <p><a class="quiet-link" href="/pack/groceries">lists, past runs, and new runs</a></p>
+</section>
+{% endif %}
+
+{% if prefs.get('mod_evenings', '1') == '1' %}
+<section class="card">
+  <div class="row spread"><h2>Evening plan</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_evenings","on":0}' hx-target="#life-body" hx-confirm="Remove this section? Its data is kept and it can be added back.">remove</button></div>
+  {% if plan %}
+  <div class="row spread">
+    <h1>{{ plan['name'] }}</h1>
+    <span>
+      <span class="stops starts">
+        <span class="chk">starts</span>
+        <input type="range" min="0" max="{{ start_stops | length - 1 }}" value="{{ start_index }}"
+               data-stops='{{ start_stops | tojson }}'>
+        <output>{{ start_stops[start_index][1] }}</output>
+        <input type="hidden" name="start_time" value="{{ start_stops[start_index][0] }}"
+               hx-post="/life/plans/{{ plan['id'] }}/start" hx-trigger="change" hx-target="#life-body">
+      </span>
+      <button class="quiet danger" hx-post="/life/plans/{{ plan['id'] }}/archive" hx-target="#life-body">done with this plan</button>
+    </span>
+  </div>
+  <ul class="tasks">
+    {% for i in items %}
+    <li class="{{ 'checked' if i['done'] }}">
+      <button class="tick {{ 'on' if i['done'] }}" hx-post="/life/items/{{ i['id'] }}/toggle" hx-target="#life-body" aria-label="toggle"></button>
+      {% if i['at'] %}<span class="clock">{{ i['at'] }}</span>{% endif %}
+      <span>{{ i['title'] }}</span>
+      <span class="age">~{{ i['minutes'] }}m</span>
+      <span class="row-actions">
+        <button class="quiet" hx-post="/life/items/{{ i['id'] }}/move" hx-vals='{"direction":"up"}' hx-target="#life-body">up</button>
+        <button class="quiet" hx-post="/life/items/{{ i['id'] }}/move" hx-vals='{"direction":"down"}' hx-target="#life-body">down</button>
+        <button class="quiet danger" hx-post="/life/items/{{ i['id'] }}/delete" hx-target="#life-body">drop</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% if total_minutes %}
+  <p class="empty">about {{ total_minutes // 60 }}h {{ total_minutes % 60 }}m left in this plan.</p>
+  {% endif %}
+  <form class="add" hx-post="/life/plans/{{ plan['id'] }}/items" hx-target="#life-body" autocomplete="off">
+    <input type="text" name="title" placeholder="add something">
+    <span class="stops">
+      <input type="range" min="0" max="{{ minute_stops | length - 1 }}" value="{{ minute_default }}"
+             data-stops='{{ minute_stops | tojson }}'>
+      <output>{{ minute_stops[minute_default][1] }}</output>
+      <input type="hidden" name="minutes" value="{{ minute_stops[minute_default][0] }}">
+    </span>
+    <button type="submit">add</button>
+  </form>
+  {% else %}
+  <p class="empty">no plan yet.</p>
+  {% endif %}
+
+  <form class="add" hx-post="/life/plans" hx-target="#life-body" autocomplete="off">
+    <input type="text" name="name" placeholder="new plan">
+    <button type="submit">new plan</button>
+  </form>
+
+  {% if other_plans %}
+  <details class="more">
+    <summary>other plans</summary>
+    <ul class="plain">
+      {% for p in other_plans %}
+      <li><a href="/life/plans/{{ p['id'] }}">{{ p['name'] }}</a>
+          <span class="age">{{ p['created_at'][:10] }}</span></li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if prefs.get('mod_packing', '1') == '1' %}
+<section class="card">
+  <div class="row spread"><h2>Packing</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_packing","on":0}' hx-target="#life-body" hx-confirm="Remove this section? Its data is kept and it can be added back.">remove</button></div>
+  {% if trips %}
+  <ul class="plain">
+    {% for tr in trips %}
+    <li><a href="/pack/trips/{{ tr['id'] }}">{{ tr['name'] }}</a>
+        <span class="age">{{ tr['unchecked'] }} left to pack</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">no active trips.</p>
+  {% endif %}
+  <p><a class="quiet-link" href="/pack">templates, past trips, and new trips</a></p>
+</section>
+{% endif %}
+
+{% set off = [] %}
+{% for key, meta in sections.items() %}{% if prefs.get(key, '1') != '1' %}{% set _ = off.append((key, meta)) %}{% endif %}{% endfor %}
+{% if off %}
+<section class="card ghost-card">
+  <h2>Add a section</h2>
+  <div class="chk-row">
+    {% for key, meta in off %}
+    <button class="quiet" hx-post="/life/sections" hx-vals='{"key":"{{ key }}","on":1}'
+            hx-target="#life-body">{{ meta[0] }}</button>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}

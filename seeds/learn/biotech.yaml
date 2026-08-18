@@ -1,0 +1,66 @@
+slug: biotech
+name: Biotech and pharma
+position: 5
+nodes:
+  - slug: drug-modalities
+    title: Drug modalities
+    summary: Small molecules, biologics, antibodies, cell and gene therapy, and RNA, what each is.
+  - slug: drug-discovery
+    title: How a drug gets discovered
+    summary: Target identification, hits, leads, and optimization before anything touches a human.
+    after: [drug-modalities]
+  - slug: clinical-trials
+    title: Clinical trial phases
+    summary: Phase 1 through 4, endpoints, controls, and what readouts actually say.
+    after: [drug-discovery]
+  - slug: fda-pathways
+    title: The FDA and approval pathways
+    summary: IND, NDA/BLA, accelerated approval, and breakthrough designation.
+    after: [clinical-trials]
+  - slug: pharma-map
+    title: Map big pharma
+    summary: Pfizer, Merck, Lilly, Novo, Roche, and what each is known for right now.
+  - slug: biotech-vs-pharma
+    title: Biotech versus pharma
+    summary: Who discovers, who develops, who sells, and why the boundary keeps moving.
+    after: [pharma-map, drug-discovery]
+  - slug: licensing-deals
+    title: Licensing and partnership deals
+    summary: Upfronts, milestones, and royalties, how assets move between companies.
+    after: [biotech-vs-pharma]
+  - slug: biotech-vc
+    title: Biotech venture creation
+    summary: Flagship and Arch, company builders, and how biotech VC differs from tech VC.
+    after: [biotech-vs-pharma]
+  - slug: patents-generics
+    title: Patents, exclusivity, and generics
+    summary: Patent cliffs, biosimilars, and why blockbuster revenues fall off ledges.
+    after: [fda-pathways]
+  - slug: drug-pricing
+    title: Drug pricing and PBMs
+    summary: List versus net price, rebates, and the IRA negotiation era.
+    after: [patents-generics]
+  - slug: omics
+    title: Genomics and the omics stack
+    summary: Sequencing costs, proteomics, and what plasma actually measures.
+    after: [drug-discovery]
+  - slug: precision-medicine
+    title: Biomarkers and precision medicine
+    summary: Companion diagnostics and treating the patients a drug will actually help.
+    after: [omics, clinical-trials]
+  - slug: hot-areas
+    title: Hot therapeutic areas
+    summary: GLP-1s, oncology, neuro, and radiopharma, where the money and science are moving.
+    after: [biotech-vs-pharma]
+  - slug: techbio
+    title: AI-native biotech
+    summary: Recursion, Isomorphic, and the techbio thesis, plus the honest skeptic case.
+    after: [hot-areas, omics]
+  - slug: biotech-markets
+    title: Follow biotech markets
+    summary: XBI as the sector pulse, catalyst calendars, and reading a readout press release.
+    after: [licensing-deals, hot-areas]
+  - slug: tools-and-cros
+    title: Tools, CROs, and the picks and shovels
+    summary: Thermo, Danaher, and the CRO world that every biotech pays on the way to the clinic.
+    after: [biotech-vs-pharma]

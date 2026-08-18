@@ -1,0 +1,77 @@
+slug: software
+name: Software and systems
+position: 2
+nodes:
+  - slug: what-happens-url
+    title: What happens when you type a URL
+    summary: DNS, TCP, TLS, HTTP, and rendering, the classic interview question as a map of the stack.
+  - slug: processes-threads
+    title: Processes and threads
+    summary: What the OS actually schedules, context switches, and why concurrency is hard.
+  - slug: memory-management
+    title: Memory management
+    summary: Stack versus heap, virtual memory, and garbage collection versus manual management.
+    after: [processes-threads]
+  - slug: filesystems
+    title: Files and file systems
+    summary: What a file descriptor is and what the OS does when you save a file.
+    after: [processes-threads]
+  - slug: networking-basics
+    title: Networking fundamentals
+    summary: IP, TCP versus UDP, ports, and sockets, the plumbing under every app.
+    after: [what-happens-url]
+  - slug: databases-101
+    title: Databases and SQL
+    summary: Tables, indexes, transactions, and why ACID matters.
+    after: [filesystems]
+  - slug: sql-vs-nosql
+    title: SQL versus NoSQL tradeoffs
+    summary: When Postgres is enough (usually) and what document and key-value stores buy you.
+    after: [databases-101]
+  - slug: apis-rest
+    title: APIs and REST
+    summary: Resources, verbs, status codes, and what makes an API pleasant.
+    after: [networking-basics]
+  - slug: program-design
+    title: Program design principles
+    summary: Separation of concerns, composition, naming, and designing for the reader.
+  - slug: testing
+    title: Testing as a design tool
+    summary: Unit versus integration tests and how testability pushes better structure.
+    after: [program-design]
+  - slug: version-control
+    title: Git beyond the basics
+    summary: Branching, rebasing, and how teams actually collaborate on code.
+    after: [program-design]
+  - slug: caching
+    title: Caching
+    summary: Where caches live, invalidation, and why it is one of the two hard problems.
+    after: [databases-101, apis-rest]
+  - slug: queues-async
+    title: Queues and async work
+    summary: Message queues, background jobs, and decoupling producers from consumers.
+    after: [apis-rest]
+  - slug: scaling-basics
+    title: How systems scale
+    summary: Vertical versus horizontal, load balancing, replication, and sharding.
+    after: [caching, queues-async]
+  - slug: system-design-practice
+    title: Design a system end to end
+    summary: Sketch a URL shortener or news feed on paper, storage, API, cache, and scale.
+    after: [scaling-basics, sql-vs-nosql]
+  - slug: distributed-tradeoffs
+    title: Distributed systems tradeoffs
+    summary: CAP intuition, consistency models, and why exactly-once is a lie.
+    after: [scaling-basics]
+  - slug: cloud-primitives
+    title: Cloud primitives
+    summary: VMs, containers, serverless, and object storage mapped to AWS names.
+    after: [scaling-basics]
+  - slug: observability
+    title: Observability
+    summary: Logs, metrics, and traces, and how you debug a system you cannot step through.
+    after: [cloud-primitives]
+  - slug: security-basics
+    title: Security fundamentals
+    summary: Auth versus authz, hashing versus encryption, OWASP top risks in plain language.
+    after: [apis-rest]

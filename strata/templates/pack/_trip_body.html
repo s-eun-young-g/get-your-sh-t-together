@@ -1,0 +1,60 @@
+<section class="card">
+  <div class="row spread">
+    <h1>{{ trip['name'] }}</h1>
+    {% if trip['status'] == 'active' %}
+    <span>
+      <span class="age">{{ unchecked }} left</span>
+      <button class="quiet" hx-post="/pack/trips/{{ trip['id'] }}/close" hx-target="#trip-body">close trip</button>
+    </span>
+    {% else %}
+    <span>
+      <span class="age">closed</span>
+      <button class="quiet" hx-post="/pack/trips/{{ trip['id'] }}/reopen" hx-target="#trip-body">reopen</button>
+    </span>
+    {% endif %}
+  </div>
+
+  <ul class="tasks">
+    {% for i in items %}
+    <li class="{{ 'checked' if i['checked'] }}">
+      {% if trip['status'] == 'active' %}
+      <button class="tick {{ 'on' if i['checked'] }}" hx-post="/pack/trip-items/{{ i['id'] }}/toggle"
+              hx-target="#trip-body" aria-label="toggle"></button>
+      {% else %}
+      <span class="tick static {{ 'on' if i['checked'] }}"></span>
+      {% endif %}
+      <span>{{ i['label'] }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% if trip['status'] == 'active' %}
+  <form class="add" hx-post="/pack/trips/{{ trip['id'] }}/items" hx-target="#trip-body" autocomplete="off">
+    <input type="text" name="label" placeholder="add an item">
+  </form>
+  {% endif %}
+</section>
+
+{% if trip['status'] == 'closed' and offers %}
+<section class="card">
+  <h2>Keep for next time?</h2>
+  <p class="empty">you added these mid-trip. fold them into a template so future you packs them automatically.</p>
+  <ul class="tasks">
+    {% for o in offers %}
+    <li>
+      <span>{{ o['label'] }}</span>
+      <span class="row-actions">
+        {% for s in sources %}
+        <button class="quiet" hx-post="/pack/trip-items/{{ o['id'] }}/offer"
+                hx-vals='{"template_id": {{ s['id'] }}}' hx-target="#trip-body">add to {{ s['name'] }}</button>
+        {% endfor %}
+        <button class="quiet" hx-post="/pack/trip-items/{{ o['id'] }}/offer"
+                hx-vals='{"dismiss": 1}' hx-target="#trip-body">just this trip</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<p><a class="quiet-link" href="/pack">all trips and templates</a></p>

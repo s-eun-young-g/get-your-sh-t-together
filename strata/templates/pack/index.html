@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ 'groceries' if kind == 'grocery' else 'pack' }} - strata{% endblock %}
+{% block content %}
+<div id="pack-body">{% include "pack/_index_body.html" %}</div>
+{% endblock %}

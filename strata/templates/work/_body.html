@@ -1,0 +1,269 @@
+{% macro trow(t) %}
+<li>
+  <button class="tick" hx-post="/now/tasks/{{ t['id'] }}/done" hx-vals='{"frame":"work"}' hx-target="#work-body" aria-label="done"></button>
+  <span>{{ t['title'] }}</span>
+  {% if t['notes'] %}<span class="summary">{{ t['notes'] }}</span>{% endif %}
+  {% if t['burden_label'] %}<span class="chip chip-{{ t['burden'] }}">{{ t['burden_label'] }}</span>{% endif %}
+  {% if t['start_early'] %}<span class="chip chip-early">start now</span>{% endif %}
+  {% if t['due_label'] %}<span class="age">{{ t['due_label'] }}</span>{% endif %}
+</li>
+{% endmacro %}
+
+{% for s in sections %}
+{% set ws = s['ws'] %}
+<section class="card">
+  <div class="row spread">
+    <form class="ws-name" hx-post="/work/workspaces/{{ ws['id'] }}/rename" hx-target="#work-body" autocomplete="off">
+      <input type="text" name="name" value="{{ ws['name'] }}" aria-label="workspace name">
+    </form>
+    <span>
+      {% if ws['kind'] == 'school' and canvas_enabled %}
+      <button class="quiet" hx-post="/work/canvas/sync" hx-target="#work-body"
+              hx-indicator="#canvas-wait">sync from canvas</button>
+      <span id="canvas-wait" class="htmx-indicator empty">syncing...</span>
+      {% endif %}
+      {% if ws['kind'] != 'growth' %}
+      <button class="quiet" hx-post="/work/workspaces/{{ ws['id'] }}/feature" hx-vals='{"feature":"meetings"}'
+              hx-target="#work-body"
+              title="running bring-up-next-time lists, one per recurring meeting or person">{{ 'hide meetings' if ws['has_meetings'] else 'meetings' }}</button>
+      {% endif %}
+      {% if ws['kind'] == 'growth' %}
+      <button class="quiet" hx-post="/work/workspaces/{{ ws['id'] }}/feature" hx-vals='{"feature":"monologue"}'
+              hx-target="#work-body"
+              title="a place to ramble">{{ 'hide monologue' if ws['has_monologue'] else 'monologue' }}</button>
+      {% endif %}
+      <button class="quiet danger" hx-post="/work/workspaces/{{ ws['id'] }}/archive" hx-target="#work-body"
+              title="hide this work area everywhere; nothing is deleted"
+              hx-confirm="archive {{ ws['name'] }}? its tasks stay on the board.">archive</button>
+      <button class="quiet danger" hx-post="/work/workspaces/{{ ws['id'] }}/delete" hx-target="#work-body"
+              hx-confirm="delete {{ ws['name'] }} and everything in it? this cannot be undone.">delete</button>
+    </span>
+  </div>
+  {% if ws['kind'] == 'school' and canvas_result %}<p class="empty">{{ canvas_result }}</p>{% endif %}
+
+  {% if ws['kind'] == 'growth' %}<h3>moves</h3>{% endif %}
+  {% if s['tasks'] %}
+  <ul class="tasks">
+    {% for t in s['tasks'] %}{{ trow(t) }}{% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if ws['kind'] == 'job' %}
+  {% for area in s['areas'] %}
+  <h3>{{ area['row']['name'] }}
+    <span class="row-actions">
+      <button class="quiet" hx-post="/work/areas/{{ area['row']['id'] }}/visibility" hx-target="#work-body">hide</button>
+      <button class="quiet danger" hx-post="/work/areas/{{ area['row']['id'] }}/archive" hx-target="#work-body"
+              hx-confirm="archive {{ area['row']['name'] }}? its tasks stay on the board.">archive</button>
+      <button class="quiet danger" hx-post="/work/areas/{{ area['row']['id'] }}/delete" hx-target="#work-body"
+              hx-confirm="delete {{ area['row']['name'] }} and its tasks? this cannot be undone.">delete</button>
+    </span>
+  </h3>
+  <ul class="tasks">
+    {% for t in area['tasks'] %}{{ trow(t) }}{% endfor %}
+  </ul>
+  {% endfor %}
+  {% if s['hidden_areas'] %}
+  <p class="empty">hidden:
+    {% for a in s['hidden_areas'] %}
+    <button class="quiet" hx-post="/work/areas/{{ a['id'] }}/visibility" hx-target="#work-body">{{ a['name'] }}</button>
+    {% endfor %}
+  </p>
+  {% endif %}
+  <h3>add area</h3>
+  <form class="add" hx-post="/work/workspaces/{{ ws['id'] }}/areas" hx-target="#work-body" autocomplete="off">
+    <input type="text" name="name" placeholder="area name">
+  </form>
+  {% endif %}
+
+
+  {% if ws['has_meetings'] %}
+  <h3>meetings</h3>
+  {% for a in s['meetings'] %}
+  <details class="drawer">
+    <summary>{{ a['row']['name'] }}
+      {% if a['row']['when_at'] %}<span class="age">{{ a['due_label'] }}</span>{% endif %}
+      <span class="badge">{{ a['items'] | length }}</span>
+      <button class="quiet danger" hx-post="/work/agendas/{{ a['row']['id'] }}/archive" hx-target="#work-body">archive</button>
+    </summary>
+    <ul class="tasks">
+      {% for i in a['items'] %}
+      <li>
+        <button class="tick" hx-post="/work/agenda-items/{{ i['id'] }}/done" hx-target="#work-body" aria-label="covered"></button>
+        <span>{{ i['text'] }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <form class="add" hx-post="/work/agendas/{{ a['row']['id'] }}/items" hx-target="#work-body" autocomplete="off">
+      <input type="text" name="text" placeholder="bring up next time">
+    </form>
+    <form class="add" hx-post="/work/agendas/{{ a['row']['id'] }}/when" hx-target="#work-body" autocomplete="off">
+      <input type="text" name="when" class="who" placeholder="{{ a['row']['when_at'] or 'set a date' }}">
+      <button type="submit" class="quiet">set date</button>
+    </form>
+  </details>
+  {% endfor %}
+  <form class="add" hx-post="/work/workspaces/{{ ws['id'] }}/agendas" hx-target="#work-body" autocomplete="off">
+    <input type="text" name="name" placeholder="new meeting">
+    <input type="text" name="when" class="who" placeholder="sep 1, 9/1, tomorrow...">
+  </form>
+  {% endif %}
+
+  {% if ws['kind'] == 'growth' and ws['has_monologue'] %}
+  <h3>monologue</h3>
+  <textarea class="notes" name="monologue" placeholder="ramble. it saves itself."
+            hx-post="/work/workspaces/{{ ws['id'] }}/monologue"
+            hx-trigger="keyup changed delay:800ms" hx-swap="none">{{ ws['monologue'] }}</textarea>
+  {% endif %}
+
+  {% if s['done_tasks'] %}
+  <details class="more completed">
+    <summary class="reveal"><span class="when-closed">show completed</span><span class="when-open">hide completed</span></summary>
+    <ul class="tasks done-list">
+      {% for t in s['done_tasks'] %}
+      <li class="checked">
+        <button class="tick on" hx-post="/now/tasks/{{ t['id'] }}/undone" hx-vals='{"frame":"work"}' hx-target="#work-body" aria-label="undo"></button>
+        <span>{{ t['title'] }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+  <h3>{{ 'add a move' if ws['kind'] == 'growth' else 'add a task' }}</h3>
+  <form class="stack" hx-post="/work/workspaces/{{ ws['id'] }}/tasks" hx-target="#work-body" autocomplete="off">
+    <input type="text" name="title" placeholder="{{ 'the move ' if ws['kind'] == 'growth' else 'what needs doing' }}" required>
+    {% if ws['kind'] == 'growth' %}
+    <input type="text" name="notes" placeholder="description">
+    {% endif %}
+    <div class="oneline">
+      {% if ws['kind'] == 'job' and s['areas'] %}
+      <span class="seg">
+        <label><input type="radio" name="dest" value="" checked><span>general</span></label>
+        {% for area in s['areas'] %}
+        <label><input type="radio" name="dest" value="a:{{ area['row']['id'] }}"><span>{{ area['row']['name'] }}</span></label>
+        {% endfor %}
+      </span>
+      {% elif ws['kind'] == 'school' and s['classes'] %}
+      <span class="seg">
+        <label><input type="radio" name="dest" value="" checked><span>general</span></label>
+        {% for c in s['classes'] %}
+        <label><input type="radio" name="dest" value="c:{{ c['row']['id'] }}"><span>{{ c['row']['name'] }}</span></label>
+        {% endfor %}
+      </span>
+      {% endif %}
+      <span class="seg">
+        {% for v, label in [('on','on'),('about','around'),('soon','soon')] %}
+        <label><input type="radio" name="due_kind" value="{{ v }}" {{ 'checked' if v == 'on' }}><span>{{ label }}</span></label>
+        {% endfor %}
+      </span>
+      <span class="datepick">
+        <input type="text" name="due_date" class="who" placeholder="sep 1, 9/1, tomorrow...">
+        <button type="button" class="quiet" data-days="1">tmrw</button>
+        <button type="button" class="quiet" data-days="7">1w</button>
+        <button type="button" class="quiet" data-days="14">2w</button>
+        <button type="button" class="quiet" data-days="30">1m</button>
+      </span>
+    </div>
+    <div class="oneline">
+      <span class="stops">
+        <span class="chk">takes</span>
+        <input type="range" min="0" max="{{ effort_stops | length - 1 }}" value="{{ effort_default }}"
+               data-stops='{{ effort_stops | tojson }}'>
+        <output>{{ effort_stops[effort_default][1] }}</output>
+        <input type="hidden" name="effort_minutes" value="{{ effort_stops[effort_default][0] }}">
+      </span>
+      <span class="seg">
+        {% for v, label in dread_choices %}
+        <label><input type="radio" name="dread" value="{{ v }}" {{ 'checked' if v == 2 }}><span>{{ label }}</span></label>
+        {% endfor %}
+      </span>
+      <button type="submit">add</button>
+    </div>
+  </form>
+
+  {% if ws['kind'] == 'school' %}
+  {% if s['due_soon'] %}
+  <h3>Due soon, heaviest first per day</h3>
+  <ul class="tasks">
+    {% for a in s['due_soon'] %}
+    <li>
+      <button class="tick" hx-post="/work/assignments/{{ a['id'] }}/done" hx-target="#work-body" aria-label="done"></button>
+      <span>{{ a['title'] }}</span>
+      <span class="chip chip-{{ a['burden'] }}">{{ a['burden_label'] }}</span>
+      {% if a['start_early'] %}<span class="chip chip-early">start now</span>{% endif %}
+      <span class="age">{{ a['class_name'] }}, {{ a['due_label'] }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% elif s['classes'] %}
+  <p class="empty">nothing due. enjoy it.</p>
+  {% endif %}
+
+  {% for c in s['classes'] %}
+  <details class="drawer">
+    <summary>{{ c['row']['name'] }}
+      <span class="badge">{{ c['assignments'] | rejectattr('done_at') | list | length }} open</span>
+      <button class="quiet" hx-post="/work/classes/{{ c['row']['id'] }}/visibility" hx-target="#work-body">hide</button>
+      <button class="quiet danger" hx-post="/work/classes/{{ c['row']['id'] }}/archive" hx-target="#work-body"
+              hx-confirm="Archive {{ c['row']['name'] }}?">archive</button>
+    </summary>
+    <ul class="tasks">
+      {% for a in c['assignments'] if not a['done_at'] %}
+      <li>
+        <button class="tick" hx-post="/work/assignments/{{ a['id'] }}/done" hx-target="#work-body" aria-label="done"></button>
+        <span>{{ a['title'] }}</span>
+        <span class="trio">
+          {% for v, label in [('s','small'),('m','medium'),('l','big')] %}
+          <button class="quiet {{ 'on' if a['burden'] == v }}" hx-post="/work/assignments/{{ a['id'] }}/burden"
+                  hx-vals='{"burden":"{{ v }}"}' hx-target="#work-body">{{ label }}</button>
+          {% endfor %}
+        </span>
+        <span class="age">{{ a['due_label'] }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if c['assignments'] | selectattr('done_at') | list %}
+    <details class="more completed">
+      <summary class="reveal"><span class="when-closed">show completed</span><span class="when-open">hide completed</span></summary>
+      <ul class="tasks done-list">
+        {% for a in c['assignments'] if a['done_at'] %}
+        <li class="checked">
+          <button class="tick on" hx-post="/work/assignments/{{ a['id'] }}/undone" hx-target="#work-body" aria-label="undo"></button>
+          <span>{{ a['title'] }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+  </details>
+  {% endfor %}
+  {% if s['hidden_classes'] %}
+  <p class="empty">hidden:
+    {% for c in s['hidden_classes'] %}
+    <button class="quiet" hx-post="/work/classes/{{ c['id'] }}/visibility" hx-target="#work-body">{{ c['name'] }}</button>
+    {% endfor %}
+  </p>
+  {% endif %}
+  <h3>add class</h3>
+  <form class="add" hx-post="/work/workspaces/{{ ws['id'] }}/classes" hx-target="#work-body" autocomplete="off">
+    <input type="text" name="name" placeholder="class name{% if canvas_enabled %} (or sync from canvas){% endif %}">
+  </form>
+  {% endif %}
+</section>
+{% endfor %}
+
+<section class="card ghost-card">
+  <h2>Add a work area</h2>
+  <form class="add" hx-post="/work/workspaces" hx-target="#work-body" autocomplete="off">
+    <input type="text" name="name" placeholder="name" required>
+    <span class="seg">
+      {% for v, label in [('job','job'),('school','school'),('growth','growth')] %}
+      <label><input type="radio" name="kind" value="{{ v }}" {{ 'checked' if v == 'job' }}><span>{{ label }}</span></label>
+      {% endfor %}
+    </span>
+    <button type="submit">add</button>
+  </form>
+  {% if capture_token_set %}
+  <p class="empty">slack and granola can push tasks in via the capture api, tagged with a workspace name.</p>
+  {% endif %}
+</section>

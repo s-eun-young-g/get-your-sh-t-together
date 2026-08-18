@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block capture %}{% endblock %}
+{% block content %}
+<div class="login">
+  <h1>strata</h1>
+  <form method="post" action="/login">
+    <input type="password" name="password" placeholder="password" autofocus>
+    <button type="submit">enter</button>
+  </form>
+  {% if error %}<p class="soft-error">{{ error }}</p>{% endif %}
+</div>
+{% endblock %}

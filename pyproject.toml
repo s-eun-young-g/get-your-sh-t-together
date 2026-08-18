@@ -1,0 +1,29 @@
+[project]
+name = "strata"
+version = "0.1.0"
+description = "A layered personal productivity app: tasks, nuisances, packing, modeling boards, and learning trees."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+ai = ["anthropic>=0.40"]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+
+[project.scripts]
+strata = "strata.app:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["strata*"]
+
+[tool.setuptools.package-data]
+strata = ["templates/**/*.html", "static/*"]

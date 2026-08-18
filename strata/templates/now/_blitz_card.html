@@ -1,0 +1,18 @@
+{% if task %}
+<div class="card blitz-card">
+  <p class="blitz-title">{{ task['title'] }}</p>
+  <p class="age">waiting {{ task['created_at'] | age_days }}d</p>
+  <div class="row actions">
+    <button hx-post="/now/tasks/{{ task['id'] }}/done" hx-vals='{"frame":"blitz"}' hx-target="#blitz">done</button>
+    <button class="quiet" hx-post="/now/tasks/{{ task['id'] }}/snooze" hx-vals='{"frame":"blitz","days":1}' hx-target="#blitz">not today</button>
+    <button class="quiet" hx-post="/now/tasks/{{ task['id'] }}/snooze" hx-vals='{"frame":"blitz","days":3}' hx-target="#blitz">snooze 3d</button>
+  </div>
+  <p class="momentum">{{ remaining }} in the pen</p>
+</div>
+{% else %}
+<div class="card blitz-card">
+  <p class="blitz-title">Pen is clear.</p>
+  
+  <p><a class="quiet-link" href="/">back home</a></p>
+</div>
+{% endif %}
