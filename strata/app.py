@@ -14,7 +14,19 @@ from .config import Settings
 from .deps import age_days
 
 PKG_DIR = Path(__file__).parent
-SEEDS_DIR = PKG_DIR.parent / "seeds"
+
+
+def _seeds_dir() -> Path:
+    # Repo checkout: seeds sit next to the package. Installed (e.g. in the
+    # deploy container): the package lives in site-packages, so fall back to
+    # the working directory.
+    for candidate in (PKG_DIR.parent / "seeds", Path.cwd() / "seeds"):
+        if candidate.is_dir():
+            return candidate
+    return PKG_DIR.parent / "seeds"
+
+
+SEEDS_DIR = _seeds_dir()
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
