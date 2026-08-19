@@ -48,6 +48,8 @@ BILL_CADENCES = [
     (6, "every 6 months"), (12, "yearly"),
 ]
 
+BILL_MODES = list(lifeops.MODE_LABELS.items())
+
 LIFE_SECTIONS = {
     "mod_routines": ("routines", "recurring upkeep that resurfaces when due"),
     "mod_finance": ("financials", "recurring charges plus card strategy"),
@@ -130,7 +132,13 @@ def life_ctx(conn: sqlite3.Connection, plan_id: int | None = None) -> dict:
         "routines": routines_svc.list_active(conn),
         "unused_presets": routines_svc.unused_presets(conn),
         "bills": lifeops.active_bills(conn),
-        "bills_upcoming": [b for b in lifeops.active_bills(conn) if b["days"] <= 7],
+        "bill_groups": lifeops.bill_groups(conn),
+        "monthly_load_label": (
+            lifeops.money_label(load)
+            if (load := lifeops.monthly_load(lifeops.active_bills(conn)))
+            else ""
+        ),
+        "bill_modes": BILL_MODES,
         "cards": conn.execute(
             "SELECT * FROM credit_cards WHERE archived_at IS NULL ORDER BY position, id"
         ).fetchall(),
@@ -243,6 +251,15 @@ def delete_item(request: Request, item_id: int, conn=Depends(get_conn)):
     return _body(request, conn, item["plan_id"])
 
 
+def _parse_amount(raw: str) -> float | None:
+    raw = raw.strip().lstrip("$").replace(",", "")
+    try:
+        value = float(raw)
+    except ValueError:
+        return None
+    return value if value > 0 else None
+
+
 @router.post("/bills")
 def add_bill(
     request: Request,
@@ -250,14 +267,19 @@ def add_bill(
     name: str = Form(...),
     next_due: str = Form(...),
     every_months: int = Form(0),
+    amount: str = Form(""),
+    mode: str = Form("manual"),
 ):
     name = name.strip()
     next_due = _valid_date(next_due)
+    if mode not in {m for m, _ in BILL_MODES}:
+        mode = "manual"
     if name and next_due:
         with conn:
             conn.execute(
-                "INSERT INTO bills (name, next_due, every_months) VALUES (?, ?, ?)",
-                (name, next_due, every_months or None),
+                "INSERT INTO bills (name, next_due, every_months, amount, mode)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (name, next_due, every_months or None, _parse_amount(amount), mode),
             )
     return _body(request, conn)
 
@@ -272,6 +294,22 @@ def bill_paid(
 
         return render(
             request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs)
+        )
+    return _body(request, conn)
+
+
+@router.post("/bills/{bill_id}/keep")
+def bill_keep(request: Request, bill_id: int, conn=Depends(get_conn)):
+    # Keeping a renewal just moves the decision to the next cycle.
+    lifeops.mark_bill_paid(conn, bill_id)
+    return _body(request, conn)
+
+
+@router.post("/bills/{bill_id}/cancel")
+def bill_cancel(request: Request, bill_id: int, conn=Depends(get_conn)):
+    with conn:
+        conn.execute(
+            "UPDATE bills SET archived_at = datetime('now') WHERE id = ?", (bill_id,)
         )
     return _body(request, conn)
 

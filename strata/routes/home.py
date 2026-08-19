@@ -70,6 +70,7 @@ def _tiles(conn: sqlite3.Connection, prefs: dict) -> list[dict]:
             due_names += [a["title"] for a in lifeops.appointments_today(conn)]
         if on("mod_finance"):
             due_names += [b["name"] for b in lifeops.bills_due(conn)]
+            due_names += [b["name"] for b in lifeops.renewals_due(conn)]
         if on("mod_routines"):
             due_names += [r["name"] for r in routines_svc.due(conn)]
         if due_names:

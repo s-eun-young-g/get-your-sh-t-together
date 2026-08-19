@@ -16,8 +16,25 @@ def add_months(d: date, months: int) -> date:
     return date(year, month, day)
 
 
+# How far ahead a renewal surfaces as a keep-or-cancel decision.
+RENEWAL_LEAD_DAYS = 14
+
+MODE_LABELS = {"manual": "I pay it", "auto": "autopays", "renewal": "renews"}
+
+
+def money_label(value: float) -> str:
+    return "$" + f"{value:,.2f}".rstrip("0").rstrip(".")
+
+
 def decorate_bill(row: sqlite3.Row) -> dict:
     d = dict(row)
+    if d["mode"] != "manual" and d["every_months"]:
+        # Autopay and renewals charge without her; a passed date means it
+        # happened, so display rolls to the next cycle instead of "overdue".
+        due = date.fromisoformat(d["next_due"])
+        while due < date.today():
+            due = add_months(due, d["every_months"])
+        d["next_due"] = due.isoformat()
     days = (date.fromisoformat(d["next_due"]) - date.today()).days
     d["days"] = days
     d["due"] = days <= 0
@@ -29,6 +46,8 @@ def decorate_bill(row: sqlite3.Row) -> dict:
         d["due_label"] = "due tomorrow"
     else:
         d["due_label"] = f"in {days}d"
+    d["amount_label"] = money_label(d["amount"]) if d["amount"] else ""
+    d["mode_label"] = MODE_LABELS[d["mode"]]
     return d
 
 
@@ -36,11 +55,44 @@ def active_bills(conn: sqlite3.Connection) -> list[dict]:
     rows = conn.execute(
         "SELECT * FROM bills WHERE archived_at IS NULL ORDER BY next_due, id"
     ).fetchall()
-    return [decorate_bill(r) for r in rows]
+    return sorted((decorate_bill(r) for r in rows), key=lambda b: (b["next_due"], b["id"]))
 
 
 def bills_due(conn: sqlite3.Connection, within_days: int = 3) -> list[dict]:
-    return [b for b in active_bills(conn) if b["days"] <= within_days]
+    # Only bills she pays herself belong on home; autopay and renewals
+    # never need a "paid" tick.
+    return [
+        b for b in active_bills(conn)
+        if b["mode"] == "manual" and b["days"] <= within_days
+    ]
+
+
+def renewals_due(conn: sqlite3.Connection) -> list[dict]:
+    """Renewals inside their decision window: keep or cancel."""
+    return [
+        b for b in active_bills(conn)
+        if b["mode"] == "renewal" and b["days"] <= RENEWAL_LEAD_DAYS
+    ]
+
+
+def bill_groups(conn: sqlite3.Connection) -> dict:
+    bills = active_bills(conn)
+    return {
+        "to_pay": [b for b in bills if b["mode"] == "manual" and b["days"] <= 7],
+        "decide": [
+            b for b in bills
+            if b["mode"] == "renewal" and b["days"] <= RENEWAL_LEAD_DAYS
+        ],
+        "autopilot": [b for b in bills if b["mode"] == "auto"],
+    }
+
+
+def monthly_load(bills: list[dict]) -> float | None:
+    """Total recurring cost per month across everything with an amount."""
+    priced = [b for b in bills if b["amount"] and b["every_months"]]
+    if not priced:
+        return None
+    return sum(b["amount"] / b["every_months"] for b in priced)
 
 
 def mark_bill_paid(conn: sqlite3.Connection, bill_id: int) -> None:

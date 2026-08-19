@@ -522,4 +522,14 @@ MIGRATIONS: list[tuple[int, str]] = [
         ALTER TABLE agendas ADD COLUMN when_at TEXT;
         """,
     ),
+    (
+        24,
+        """
+        -- Financial items split by what you do about them: pay it yourself,
+        -- let it autopay, or decide before it renews.
+        ALTER TABLE bills ADD COLUMN amount REAL;
+        ALTER TABLE bills ADD COLUMN mode TEXT NOT NULL DEFAULT 'manual'
+          CHECK (mode IN ('manual','auto','renewal'));
+        """,
+    ),
 ]

@@ -47,19 +47,59 @@
 <section class="card">
   <div class="row spread"><h2>financials</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_finance","on":0}' hx-target="#life-body" hx-confirm="Remove this section? Its data is kept and it can be added back.">remove</button></div>
 
-  {% if bills_upcoming %}
+  {% if monthly_load_label %}
+  <p class="summary">recurring load: about {{ monthly_load_label }}/mo</p>
+  {% endif %}
+
+  {% if bill_groups['to_pay'] %}
   <ul class="tasks">
-    {% for b in bills_upcoming %}
+    {% for b in bill_groups['to_pay'] %}
     <li>
       <button class="tick" hx-post="/life/bills/{{ b['id'] }}/paid" hx-target="#life-body" aria-label="paid"></button>
       <span>{{ b['name'] }}</span>
+      {% if b['amount_label'] %}<span class="age">{{ b['amount_label'] }}</span>{% endif %}
       {% if b['due'] %}<span class="chip chip-l">{{ b['due_label'] }}</span>
       {% else %}<span class="age">{{ b['due_label'] }}</span>{% endif %}
     </li>
     {% endfor %}
   </ul>
-  {% else %}
-  <p class="empty">nothing coming up.</p>
+  {% endif %}
+
+  {% if bill_groups['decide'] %}
+  <h3>decide before it renews</h3>
+  <ul class="tasks">
+    {% for b in bill_groups['decide'] %}
+    <li>
+      <span>{{ b['name'] }}</span>
+      {% if b['amount_label'] %}<span class="age">{{ b['amount_label'] }}</span>{% endif %}
+      {% if b['due'] %}<span class="chip chip-l">{{ b['due_label'] }}</span>
+      {% else %}<span class="age">{{ b['due_label'] }}</span>{% endif %}
+      <span class="row-actions">
+        <button class="quiet" hx-post="/life/bills/{{ b['id'] }}/keep" hx-target="#life-body">keeping it</button>
+        <button class="quiet danger" hx-post="/life/bills/{{ b['id'] }}/cancel" hx-target="#life-body">cancelled it</button>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if not bill_groups['to_pay'] and not bill_groups['decide'] %}
+  <p class="empty">nothing needs you.</p>
+  {% endif %}
+
+  {% if bill_groups['autopilot'] %}
+  <details class="more">
+    <summary>on autopilot ({{ bill_groups['autopilot'] | length }})</summary>
+    <ul class="tasks done-list">
+      {% for b in bill_groups['autopilot'] %}
+      <li>
+        <span>{{ b['name'] }}</span>
+        {% if b['amount_label'] %}<span class="age">{{ b['amount_label'] }}</span>{% endif %}
+        <span class="age">next {{ b['next_due'] }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
   {% endif %}
 
   <details class="more completed">
@@ -68,7 +108,8 @@
       {% for b in bills %}
       <li>
         <span>{{ b['name'] }}</span>
-        <span class="age">{{ b['due_label'] }}, {% if b['every_months'] %}every {{ b['every_months'] }}mo{% else %}one time{% endif %}</span>
+        {% if b['amount_label'] %}<span class="age">{{ b['amount_label'] }}</span>{% endif %}
+        <span class="age">{{ b['due_label'] }}, {% if b['every_months'] %}every {{ b['every_months'] }}mo{% else %}one time{% endif %}, {{ b['mode_label'] }}</span>
         <span class="row-actions">
           <button class="quiet danger" hx-post="/life/bills/{{ b['id'] }}/delete" hx-target="#life-body">drop</button>
         </span>
@@ -79,38 +120,45 @@
   <form class="add" hx-post="/life/bills" hx-target="#life-body" autocomplete="off">
     <input type="text" name="name" placeholder="add a recurring charge or renewal" required>
     <input type="text" name="next_due" class="who" placeholder="sep 1, 9/1, tomorrow..." required>
+    <input type="text" name="amount" class="who" placeholder="amount">
     <span class="seg">
       {% for v, label in bill_cadences %}
       <label><input type="radio" name="every_months" value="{{ v }}" {{ 'checked' if v == 1 }}><span>{{ label }}</span></label>
       {% endfor %}
     </span>
+    <span class="seg">
+      {% for v, label in bill_modes %}
+      <label><input type="radio" name="mode" value="{{ v }}" {{ 'checked' if v == 'manual' }}><span>{{ label }}</span></label>
+      {% endfor %}
+    </span>
     <button type="submit">add</button>
   </form>
 
-  <h3>cards</h3>
-  {% if cards %}
-  <ul class="tasks">
-    {% for c in cards %}
-    <li>
-      <span>{{ c['name'] }}</span>
-      {% if c['use_for'] %}<span class="summary">use for: {{ c['use_for'] }}</span>{% endif %}
-      {% if c['wins'] %}<span class="summary">wins: {{ c['wins'] }}</span>{% endif %}
-      <span class="row-actions">
-        <button class="quiet danger" hx-post="/life/cards/{{ c['id'] }}/delete" hx-target="#life-body">drop</button>
-      </span>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  {% endif %}
-  <form class="stack" hx-post="/life/cards" hx-target="#life-body" autocomplete="off">
-    <div class="oneline">
-      <input type="text" name="name" placeholder="card name" required>
-      <input type="text" name="use_for" placeholder="use it for">
-      <input type="text" name="wins" placeholder="biggest wins">
-      <button type="submit">add</button>
-    </div>
-  </form>
+  <details class="more">
+    <summary>card strategy</summary>
+    {% if cards %}
+    <ul class="tasks">
+      {% for c in cards %}
+      <li>
+        <span>{{ c['name'] }}</span>
+        {% if c['use_for'] %}<span class="summary">use for: {{ c['use_for'] }}</span>{% endif %}
+        {% if c['wins'] %}<span class="summary">wins: {{ c['wins'] }}</span>{% endif %}
+        <span class="row-actions">
+          <button class="quiet danger" hx-post="/life/cards/{{ c['id'] }}/delete" hx-target="#life-body">drop</button>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <form class="stack" hx-post="/life/cards" hx-target="#life-body" autocomplete="off">
+      <div class="oneline">
+        <input type="text" name="name" placeholder="card name" required>
+        <input type="text" name="use_for" placeholder="use it for">
+        <input type="text" name="wins" placeholder="biggest wins">
+        <button type="submit">add</button>
+      </div>
+    </form>
+  </details>
 </section>
 {% endif %}
 

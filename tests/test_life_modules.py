@@ -122,3 +122,90 @@ def test_credit_cards(client, app_db):
     cid = app_db.execute("SELECT id FROM credit_cards").fetchone()["id"]
     client.post(f"/life/cards/{cid}/delete")
     assert "sapphire" not in client.get("/life").text
+
+
+def test_autopay_bill_stays_off_home(client, app_db):
+    due = date.today().isoformat()
+    client.post("/life/bills", data={
+        "name": "spotify", "next_due": due, "every_months": "1", "mode": "auto",
+    })
+    bid = app_db.execute("SELECT id FROM bills").fetchone()["id"]
+    home = client.get("/").text
+    assert f"/life/bills/{bid}/paid" not in home  # no tick, nothing to do
+    assert "all clear" in home  # the life tile does not count it as due
+    html = client.get("/life").text
+    assert "on autopilot (1)" in html
+    assert "nothing needs you." in html
+
+
+def test_autopay_rolls_past_charges_forward(client, app_db):
+    from strata.services.lifeops import active_bills
+
+    stale = (date.today() - timedelta(days=40)).isoformat()
+    client.post("/life/bills", data={
+        "name": "icloud", "next_due": stale, "every_months": "1", "mode": "auto",
+    })
+    b = active_bills(app_db)[0]
+    assert b["days"] >= 0
+    assert "overdue" not in b["due_label"]
+
+
+def test_renewal_surfaces_as_decision(client, app_db):
+    soon = (date.today() + timedelta(days=10)).isoformat()
+    client.post("/life/bills", data={
+        "name": "hulu", "next_due": soon, "every_months": "12", "mode": "renewal",
+    })
+    html = client.get("/life").text
+    assert "decide before it renews" in html
+    assert "keeping it" in html and "cancelled it" in html
+    assert "hulu" in client.get("/").text  # life tile counts the decision
+
+
+def test_renewal_keep_moves_to_next_cycle(client, app_db):
+    soon = date.today() + timedelta(days=10)
+    client.post("/life/bills", data={
+        "name": "hulu", "next_due": soon.isoformat(), "every_months": "12", "mode": "renewal",
+    })
+    bid = app_db.execute("SELECT id FROM bills").fetchone()["id"]
+    client.post(f"/life/bills/{bid}/keep")
+    row = app_db.execute("SELECT * FROM bills").fetchone()
+    assert row["next_due"] == add_months(soon, 12).isoformat()
+    assert row["archived_at"] is None
+    assert "decide before it renews" not in client.get("/life").text
+
+
+def test_renewal_cancel_archives(client, app_db):
+    soon = (date.today() + timedelta(days=5)).isoformat()
+    client.post("/life/bills", data={
+        "name": "hulu", "next_due": soon, "every_months": "12", "mode": "renewal",
+    })
+    bid = app_db.execute("SELECT id FROM bills").fetchone()["id"]
+    client.post(f"/life/bills/{bid}/cancel")
+    assert app_db.execute("SELECT archived_at FROM bills").fetchone()["archived_at"]
+    assert "hulu" not in client.get("/life").text
+
+
+def test_amounts_and_monthly_load(client, app_db):
+    due = (date.today() + timedelta(days=20)).isoformat()
+    client.post("/life/bills", data={
+        "name": "rent", "next_due": due, "every_months": "1",
+        "amount": "$1,400", "mode": "manual",
+    })
+    client.post("/life/bills", data={
+        "name": "insurance", "next_due": due, "every_months": "6",
+        "amount": "600", "mode": "auto",
+    })
+    assert app_db.execute(
+        "SELECT amount FROM bills WHERE name = 'rent'"
+    ).fetchone()["amount"] == 1400.0
+    html = client.get("/life").text
+    assert "recurring load: about $1,500/mo" in html
+    assert "$1,400" in html
+
+
+def test_bad_amount_is_dropped(client, app_db):
+    due = date.today().isoformat()
+    client.post("/life/bills", data={
+        "name": "rent", "next_due": due, "every_months": "1", "amount": "idk",
+    })
+    assert app_db.execute("SELECT amount FROM bills").fetchone()["amount"] is None
