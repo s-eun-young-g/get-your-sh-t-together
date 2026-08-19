@@ -1,4 +1,4 @@
-# strata
+# get your sh*t together
 
 A personal productivity app with layers instead of one long list. Built for a brain that needs the day assembled for it, dreaded tasks handled specially, and structure that grows without nagging.
 
