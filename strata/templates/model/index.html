@@ -6,6 +6,7 @@
   <form class="add" hx-post="/model/boards" autocomplete="off">
     <input type="text" name="name" placeholder="what are you figuring out?" required>
   </form>
+  <p><a class="quiet-link" href="/import/notion">import from notion</a></p>
   <ul class="tasks">
     {% for b in boards %}
     <li>

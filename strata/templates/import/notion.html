@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}import from notion - strata{% endblock %}
+{% block content %}
+<section class="card">
+  <h2>import from notion</h2>
+  <p class="empty">
+    works from notion's own export, so it fits any workspace: in notion open
+    settings, then export content, and pick "markdown and csv". the zip that
+    downloads uploads here whole. pages and databases arrive as candidates;
+    nothing moves in until you say so.
+  </p>
+  <form class="add" method="post" action="/import/notion/upload" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".zip" required>
+    <button type="submit">upload</button>
+  </form>
+  {% if msg %}<p class="ok">{{ msg }}</p>{% endif %}
+</section>
+
+{% if databases %}
+<section class="card">
+  <h2>databases</h2>
+  <ul class="tasks">
+    {% for d in databases %}
+    <li>
+      <span>{{ d['row']['title'] }}</span>
+      <span class="age">{{ d['count'] }} rows</span>
+      <span class="summary">{{ d['row']['digest'] }}</span>
+      <form class="add" method="post" action="/import/notion/{{ d['row']['id'] }}/board">
+        <span class="chk">split categories by</span>
+        <span class="seg">
+          {% for c in d['columns'][1:] %}
+          <label><input type="radio" name="group_col" value="{{ c }}" {{ 'checked' if c == d['suggested'] }}><span>{{ c | lower }}</span></label>
+          {% endfor %}
+        </span>
+        <button type="submit" class="quiet">make a model</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if pages or databases %}
+<section class="card">
+  <h2>to the inbox</h2>
+  <form method="post" action="/import/notion/act">
+    <ul class="tasks">
+      {% for d in databases %}
+      <li>
+        <label class="chk pick">
+          <input type="checkbox" name="page_ids" value="{{ d['row']['id'] }}">
+          <span>{{ d['row']['title'] }}</span>
+        </label>
+        <span class="age">every row becomes a task</span>
+      </li>
+      {% endfor %}
+      {% for p in pages %}
+      <li>
+        <label class="chk pick">
+          <input type="checkbox" name="page_ids" value="{{ p['id'] }}">
+          <span>{{ p['title'] }}</span>
+        </label>
+        {% if p['digest'] %}<span class="summary">{{ p['digest'][:120] }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="row actions">
+      <button type="submit" name="action" value="inbox">add selected to the inbox</button>
+      <button type="submit" name="action" value="dismiss" class="quiet danger">dismiss selected</button>
+    </div>
+  </form>
+</section>
+{% endif %}
+
+<p><a class="quiet-link" href="/model">back to model</a></p>
+{% endblock %}

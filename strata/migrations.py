@@ -532,4 +532,20 @@ MIGRATIONS: list[tuple[int, str]] = [
           CHECK (mode IN ('manual','auto','renewal'));
         """,
     ),
+    (
+        25,
+        """
+        -- Pages and databases parsed from a Notion workspace export,
+        -- awaiting triage into the inbox or into model boards.
+        CREATE TABLE imported_pages (
+          id INTEGER PRIMARY KEY,
+          kind TEXT NOT NULL CHECK (kind IN ('page','database')),
+          title TEXT NOT NULL,
+          digest TEXT NOT NULL DEFAULT '',
+          payload TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','used','dismissed')),
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        """,
+    ),
 ]

@@ -77,7 +77,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return await call_next(request)
 
     from .routes import (
-        api, home, learn, life, model, now, pack, pause, rescue, settings_page, work,
+        api, home, learn, life, model, notion, now, pack, pause, rescue,
+        settings_page, work,
     )
 
     app.include_router(home.router)
@@ -90,6 +91,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(pack.router)
     app.include_router(model.router)
     app.include_router(learn.router)
+    app.include_router(notion.router)
     app.include_router(api.router)
     return app
 
