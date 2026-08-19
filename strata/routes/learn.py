@@ -152,7 +152,7 @@ def node_done(
         from .home import build_home_ctx
 
         return render(
-            request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs)
+            request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs, request.app.state.settings)
         )
     if frame == "learn":
         return render(request, "learn/_index_body.html", _index_ctx(conn))

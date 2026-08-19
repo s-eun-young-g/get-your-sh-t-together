@@ -92,7 +92,7 @@ def _frame_response(request: Request, conn: sqlite3.Connection, frame: str):
     from .home import build_home_ctx
 
     return render(
-        request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs)
+        request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs, request.app.state.settings)
     )
 
 

@@ -10,6 +10,17 @@
 
 <section class="card">
   <h2>Today</h2>
+  {% if gcal_today %}
+  <ul class="tasks">
+    {% for e in gcal_today %}
+    <li>
+      {% if e['time'] %}<span class="clock">{{ e['time'] }}</span>{% endif %}
+      <span>{{ e['title'] }}</span>
+      <span class="chip chip-hue-life">calendar</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
   {% if today_items %}
   <ul class="tasks">
     {% for i in today_items %}
@@ -21,7 +32,7 @@
     </li>
     {% endfor %}
   </ul>
-  {% else %}
+  {% elif not gcal_today %}
   <p class="empty">nothing up next.</p>
   {% endif %}
   {% if stale_count %}

@@ -39,7 +39,7 @@ fly deploy
 
 A password is mandatory before deploying; without it the whole app is public.
 
-Optional secrets, same pattern: `ANTHROPIC_API_KEY` (Claude mapping for imports), `CANVAS_BASE_URL` + `CANVAS_TOKEN` (school sync), `STRATA_CAPTURE_TOKEN` (lets Slack workflows, Zapier/Granola automations, and iOS Shortcuts post into the inbox once the app has a public URL).
+Optional secrets, same pattern: `ANTHROPIC_API_KEY` (Claude mapping for imports), `CANVAS_BASE_URL` + `CANVAS_TOKEN` (school sync), `STRATA_CAPTURE_TOKEN` (lets Slack workflows, Zapier/Granola automations, and iOS Shortcuts post into the inbox once the app has a public URL), `GCAL_ICS_URL` (shows Google Calendar events on home and in life; the secret iCal address from calendar settings, several separated by commas).
 
 Bring existing local data along:
 

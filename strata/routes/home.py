@@ -238,9 +238,11 @@ def _today_digest(conn: sqlite3.Connection, prefs: dict) -> list[dict]:
     return items
 
 
-def build_home_ctx(conn: sqlite3.Connection, prefs: dict | None = None) -> dict:
+def build_home_ctx(
+    conn: sqlite3.Connection, prefs: dict | None = None, settings=None
+) -> dict:
     from . import now as now_routes
-    from ..services import workspaces
+    from ..services import gcal, workspaces
 
     prefs = prefs or {}
     inbox = now_routes.inbox_tasks(conn)
@@ -249,6 +251,7 @@ def build_home_ctx(conn: sqlite3.Connection, prefs: dict | None = None) -> dict:
         f" AND done_at IS NULL AND updated_at <= datetime('now', '-{now_routes.STALE_DAYS} days')"
     ).fetchone()["n"]
     return {
+        "gcal_today": gcal.today(settings) if settings else [],
         "today_items": _today_digest(conn, prefs),
         "inbox": inbox,
         "nuisances": now_routes.nuisance_pen(conn),
@@ -264,7 +267,7 @@ def build_home_ctx(conn: sqlite3.Connection, prefs: dict | None = None) -> dict:
 
 @router.get("/")
 def home(request: Request, conn=Depends(get_conn)):
-    return render(request, "home.html", build_home_ctx(conn, request.app.state.prefs))
+    return render(request, "home.html", build_home_ctx(conn, request.app.state.prefs, request.app.state.settings))
 
 
 @router.post("/capture")
@@ -288,7 +291,7 @@ def capture(
     ctx = {"captured": bool(title), "inbox_count": count}
     if from_home:
         # Refresh the merged board below the capture bar in the same swap.
-        ctx.update(build_home_ctx(conn, request.app.state.prefs))
+        ctx.update(build_home_ctx(conn, request.app.state.prefs, request.app.state.settings))
         ctx["capture_from_home"] = True
         return render(request, "_capture_home.html", ctx)
     return render(request, "_capture.html", ctx)
@@ -301,7 +304,7 @@ def set_manifesto(request: Request, conn=Depends(get_conn), manifesto: str = For
     prefs_svc.save(conn, {"manifesto": manifesto.strip()})
     request.app.state.prefs.clear()
     request.app.state.prefs.update(prefs_svc.load(conn))
-    return render(request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs))
+    return render(request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs, request.app.state.settings))
 
 
 @router.get("/login")

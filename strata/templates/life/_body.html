@@ -203,6 +203,17 @@
   <form class="add" hx-post="/life/appointments" hx-target="#life-body" autocomplete="off">
     <input type="text" name="title" placeholder="add one">
   </form>
+  {% if gcal_week %}
+  <h3>on the calendar</h3>
+  <ul class="tasks">
+    {% for e in gcal_week %}
+    <li>
+      <span class="age">{{ e['when_label'] }}{% if e['time'] %} {{ e['time'] }}{% endif %}</span>
+      <span>{{ e['title'] }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
 </section>
 {% endif %}
 

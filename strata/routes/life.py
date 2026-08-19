@@ -90,7 +90,11 @@ def _timeline(plan: sqlite3.Row, items: list[sqlite3.Row]) -> list[dict]:
     return out
 
 
-def life_ctx(conn: sqlite3.Connection, plan_id: int | None = None) -> dict:
+def life_ctx(
+    conn: sqlite3.Connection, plan_id: int | None = None, settings=None
+) -> dict:
+    from ..services import gcal
+
     plans = conn.execute(
         "SELECT * FROM evening_plans WHERE archived_at IS NULL ORDER BY id DESC"
     ).fetchall()
@@ -143,6 +147,7 @@ def life_ctx(conn: sqlite3.Connection, plan_id: int | None = None) -> dict:
             "SELECT * FROM credit_cards WHERE archived_at IS NULL ORDER BY position, id"
         ).fetchall(),
         "appointments": lifeops.open_appointments(conn),
+        "gcal_week": gcal.events(settings) if settings else [],
         "grocery_runs": conn.execute(
             "SELECT t.*, (SELECT COUNT(*) FROM trip_items i"
             "  WHERE i.trip_id = t.id AND i.checked = 0) AS unchecked"
@@ -154,16 +159,26 @@ def life_ctx(conn: sqlite3.Connection, plan_id: int | None = None) -> dict:
 
 @router.get("")
 def life_page(request: Request, conn=Depends(get_conn)):
-    return render(request, "life/index.html", life_ctx(conn))
+    return render(
+        request, "life/index.html", life_ctx(conn, settings=request.app.state.settings)
+    )
 
 
 @router.get("/plans/{plan_id}")
 def plan_page(request: Request, plan_id: int, conn=Depends(get_conn)):
-    return render(request, "life/index.html", life_ctx(conn, plan_id))
+    return render(
+        request,
+        "life/index.html",
+        life_ctx(conn, plan_id, settings=request.app.state.settings),
+    )
 
 
 def _body(request: Request, conn: sqlite3.Connection, plan_id: int | None = None):
-    return render(request, "life/_body.html", life_ctx(conn, plan_id))
+    return render(
+        request,
+        "life/_body.html",
+        life_ctx(conn, plan_id, settings=request.app.state.settings),
+    )
 
 
 @router.post("/plans")
@@ -293,7 +308,7 @@ def bill_paid(
         from .home import build_home_ctx
 
         return render(
-            request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs)
+            request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs, request.app.state.settings)
         )
     return _body(request, conn)
 
@@ -394,7 +409,7 @@ def appointment_done(
         from .home import build_home_ctx
 
         return render(
-            request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs)
+            request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs, request.app.state.settings)
         )
     return _body(request, conn)
 
@@ -437,7 +452,7 @@ def routine_done(
     if frame == "home":
         from .home import build_home_ctx
 
-        return render(request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs))
+        return render(request, "_home_blocks.html", build_home_ctx(conn, request.app.state.prefs, request.app.state.settings))
     return _body(request, conn)
 
 

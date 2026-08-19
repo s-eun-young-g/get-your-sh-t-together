@@ -52,6 +52,7 @@ class Settings:
         default_factory=lambda: os.environ.get("CANVAS_BASE_URL", "").rstrip("/")
     )
     canvas_token: str = field(default_factory=lambda: os.environ.get("CANVAS_TOKEN", ""))
+    gcal_ics_url: str = field(default_factory=lambda: os.environ.get("GCAL_ICS_URL", ""))
     secret: str = ""
 
     def __post_init__(self) -> None:
@@ -73,3 +74,11 @@ class Settings:
     @property
     def canvas_enabled(self) -> bool:
         return bool(self.canvas_base_url and self.canvas_token)
+
+    @property
+    def gcal_ics_urls(self) -> list[str]:
+        return [u for u in (p.strip() for p in self.gcal_ics_url.split(",")) if u]
+
+    @property
+    def gcal_enabled(self) -> bool:
+        return bool(self.gcal_ics_urls)
