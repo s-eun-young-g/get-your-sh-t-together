@@ -55,3 +55,11 @@ def test_settings_page_renders_saved_note(client):
     client.post("/settings", data={"name": "Sofia"} | LIFE_ON)
     html = client.get("/settings?saved=1").text
     assert "saved" in html and 'value="Sofia"' in html
+
+
+def test_settings_lists_imports_and_connections(client):
+    html = client.get("/settings").text
+    assert 'href="/learn/import"' in html
+    assert 'href="/import/notion"' in html
+    assert "canvas_base_url" in html  # off states explain how to turn them on
+    assert "gcal_ics_url" in html

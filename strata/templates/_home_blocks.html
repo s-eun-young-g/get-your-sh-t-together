@@ -41,8 +41,9 @@
 </section>
 
 <details class="drawer">
-  <summary>Frog pen <span class="summary">eat the frog</span> <span class="badge">{{ nuisances | length }}</span>
+  <summary>Frog pen <span class="badge">{{ nuisances | length }}</span>
     {% if nuisances %}<a class="quiet-link" href="/now/blitz">blitz</a>{% endif %}
+    <span class="subline">eat the frog</span>
   </summary>
   {% if nuisances %}
   <ul class="tasks">

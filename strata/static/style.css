@@ -170,8 +170,17 @@ details.drawer summary {
   display: flex;
   align-items: center;
   gap: 0.55rem;
+  flex-wrap: wrap;
 }
 details.drawer summary::marker { color: var(--faint); }
+details.drawer summary .subline {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  margin-top: 0.1rem;
+}
 
 /* the frog block is the single tinted surface in the app */
 .card.frog-card, main > .card.frog-card:nth-of-type(2n), main > .card.frog-card:nth-of-type(3n) {

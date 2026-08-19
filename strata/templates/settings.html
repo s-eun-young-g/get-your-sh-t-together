@@ -57,4 +57,30 @@
     {% if request.query_params.get('saved') %}<span class="ok">saved</span>{% endif %}
   </form>
 </section>
+
+<section class="card">
+  <h2>Bring things in</h2>
+  <ul class="plain">
+    <li><a href="/learn/import">import chats</a>
+      <span class="empty">a chatgpt or claude export, mapped into the learn trees</span></li>
+    <li><a href="/import/notion">import from notion</a>
+      <span class="empty">a workspace export; pages to the inbox, databases to models</span></li>
+  </ul>
+  {% set s = request.app.state.settings %}
+  <ul class="plain">
+    <li><span class="chip">canvas</span>
+      {% if s.canvas_enabled %}<span class="ok">on</span> <span class="empty">sync lives in work, on each school area</span>
+      {% else %}<span class="empty">off; set canvas_base_url and canvas_token to pull assignments</span>{% endif %}</li>
+    <li><span class="chip">google calendar</span>
+      {% if s.gcal_enabled %}<span class="ok">on</span> <span class="empty">events show on home and in life</span>
+      {% else %}<span class="empty">off; set gcal_ics_url to the secret ical address from calendar settings</span>{% endif %}</li>
+    <li><span class="chip">capture</span>
+      {% if s.capture_token %}<span class="ok">on</span> <span class="empty">slack, granola, and shortcuts can post into the inbox</span>
+      {% else %}<span class="empty">off; set strata_capture_token to let outside tools post into the inbox</span>{% endif %}</li>
+    <li><span class="chip">claude</span>
+      {% if s.ai_enabled %}<span class="ok">on</span> <span class="empty">import mapping and learn suggestions are live</span>
+      {% else %}<span class="empty">off; set anthropic_api_key to map imports automatically</span>{% endif %}</li>
+  </ul>
+  <p class="empty">settings live in the .env file next to run.command; restart the app after editing it.</p>
+</section>
 {% endblock %}
