@@ -1,6 +1,6 @@
 # get your sh*t together
 
-A personal productivity app with layers instead of one long list. Built for a brain that needs the day assembled for it, dreaded tasks handled specially, and structure that grows without nagging.
+A personal productivity app with layers instead of one long list. New here? [The guide](GUIDE.md) explains every tab and how to get your own copy. Built for a brain that needs the day assembled for it, dreaded tasks handled specially, and structure that grows without nagging.
 
 ## Sections
 
