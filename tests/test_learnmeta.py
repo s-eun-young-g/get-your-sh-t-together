@@ -233,3 +233,25 @@ def test_merge_without_pick_is_a_noop(client, app_db):
     before = app_db.execute("SELECT COUNT(*) AS n FROM tracks").fetchone()["n"]
     client.post(f"/learn/tracks/{a['id']}/merge", data={"name": "whatever"})
     assert app_db.execute("SELECT COUNT(*) AS n FROM tracks").fetchone()["n"] == before
+
+
+def test_fresh_app_starts_with_no_tracks(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from strata.app import create_app
+    from strata.config import Settings
+
+    s = Settings(data_dir=tmp_path, secret="test-secret")
+    with TestClient(create_app(s)) as c:
+        html = c.get("/learn").text
+        assert "nothing here yet" in html
+
+
+def test_delete_node_from_track(client, app_db):
+    t, nodes = _track_with_nodes(app_db)
+    client.post(f"/learn/nodes/{nodes[0]['id']}/delete")
+    assert app_db.execute(
+        "SELECT COUNT(*) AS n FROM nodes WHERE id = ?", (nodes[0]["id"],)
+    ).fetchone()["n"] == 0
+    # edges into the deleted item are gone too, unlocking never crashes
+    assert client.get(f"/learn/tracks/{t}").status_code == 200

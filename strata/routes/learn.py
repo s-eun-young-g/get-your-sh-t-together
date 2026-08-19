@@ -188,6 +188,23 @@ def merge_tracks(
     return render(request, "learn/_index_body.html", _index_ctx(conn))
 
 
+@router.post("/nodes/{node_id}/delete")
+def delete_node(
+    request: Request, node_id: int, conn=Depends(get_conn), frame: str = Form("track")
+):
+    node = conn.execute(
+        "SELECT track_id FROM nodes WHERE id = ?", (node_id,)
+    ).fetchone()
+    if node is None or frame == "learn":
+        if node is not None:
+            with conn:
+                conn.execute("DELETE FROM nodes WHERE id = ?", (node_id,))
+        return render(request, "learn/_index_body.html", _index_ctx(conn))
+    with conn:
+        conn.execute("DELETE FROM nodes WHERE id = ?", (node_id,))
+    return render(request, "learn/_track_body.html", _track_ctx(conn, node["track_id"]))
+
+
 @router.post("/log-today")
 def log_today(request: Request, conn=Depends(get_conn)):
     learnmeta.log_day(conn, "manual")

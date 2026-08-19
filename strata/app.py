@@ -37,9 +37,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     conn = db.connect(settings.db_path)
     try:
         db.migrate(conn)
-        from .services.seed_sync import sync_all
-
-        sync_all(conn, SEEDS_DIR / "learn")
         prefs = prefs_svc.load(conn)
         from .services.workspaces import bootstrap
 

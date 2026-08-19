@@ -51,11 +51,13 @@
       </form>
     </div>
   </details>
-  {% if not done %}
   <span class="row-actions">
+    {% if not done %}
     <button class="quiet" hx-post="/learn/nodes/{{ n['id'] }}/focus" hx-target="#track-body">{{ 'unmark' if n['learning_now'] else 'learning now' }}</button>
+    {% endif %}
+    <button class="quiet danger" hx-post="/learn/nodes/{{ n['id'] }}/delete" hx-target="#track-body"
+            hx-confirm="delete {{ n['title'] }}?">drop</button>
   </span>
-  {% endif %}
 </li>
 {% endmacro %}
 

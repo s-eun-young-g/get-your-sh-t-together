@@ -147,6 +147,10 @@ def test_map_flow_and_done_accept(tmp_path, monkeypatch):
     app = create_app(make_settings(tmp_path, api_key="k"))
     with TestClient(app) as client:
         conn = db.connect(make_settings(tmp_path).db_path)
+        from strata.app import SEEDS_DIR
+        from strata.services.seed_sync import sync_all
+
+        sync_all(conn, SEEDS_DIR / "learn")
         _upload(client)
         cid = conn.execute("SELECT id FROM imported_chats LIMIT 1").fetchone()["id"]
         client.post("/learn/import/act", data={"action": "map", "chat_ids": str(cid)})

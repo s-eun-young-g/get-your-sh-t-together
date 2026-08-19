@@ -31,8 +31,18 @@ def settings(tmp_path):
 
 @pytest.fixture
 def client(settings):
+    # The app no longer auto-seeds learn tracks; most tests still assume the
+    # seed trees exist, so load them here explicitly.
+    from strata.app import SEEDS_DIR
+    from strata.services.seed_sync import sync_all
+
     app = create_app(settings)
     with TestClient(app) as c:
+        seed_conn = db.connect(settings.db_path)
+        try:
+            sync_all(seed_conn, SEEDS_DIR / "learn")
+        finally:
+            seed_conn.close()
         yield c
 
 
