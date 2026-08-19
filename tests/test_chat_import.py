@@ -122,7 +122,7 @@ def test_map_requires_key(client, app_db):
         data={"action": "map", "chat_ids": str(cid)},
         follow_redirects=False,
     )
-    assert "ANTHROPIC_API_KEY" in r.headers["location"].replace("+", " ").replace("%20", " ")
+    assert "anthropic_api_key" in r.headers["location"].replace("+", " ").replace("%20", " ")
     assert app_db.execute(
         "SELECT status FROM imported_chats WHERE id = ?", (cid,)
     ).fetchone()["status"] == "new"

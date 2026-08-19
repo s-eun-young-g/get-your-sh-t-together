@@ -117,6 +117,77 @@ def add_track(request: Request, conn=Depends(get_conn), name: str = Form(...)):
     return render(request, "learn/_index_body.html", _index_ctx(conn))
 
 
+def _retire_slug(conn: sqlite3.Connection, slug: str) -> None:
+    # Keep seed sync from resurrecting a deleted or merged-away seed track.
+    from ..services import prefs as prefs_svc
+    from ..services.seed_sync import retired_slugs
+
+    slugs = retired_slugs(conn) | {slug}
+    prefs_svc.save(conn, {"retired_tracks": ",".join(sorted(slugs))})
+
+
+@router.post("/tracks/{track_id}/delete")
+def delete_track(request: Request, track_id: int, conn=Depends(get_conn)):
+    t = conn.execute("SELECT * FROM tracks WHERE id = ?", (track_id,)).fetchone()
+    if t is not None:
+        _retire_slug(conn, t["slug"])
+        with conn:
+            conn.execute("DELETE FROM tracks WHERE id = ?", (track_id,))
+    return render(request, "learn/_index_body.html", _index_ctx(conn))
+
+
+@router.post("/tracks/{track_id}/merge")
+def merge_tracks(
+    request: Request,
+    track_id: int,
+    conn=Depends(get_conn),
+    other_id: int = Form(0),
+    name: str = Form(""),
+):
+    a = conn.execute("SELECT * FROM tracks WHERE id = ?", (track_id,)).fetchone()
+    b = conn.execute("SELECT * FROM tracks WHERE id = ?", (other_id,)).fetchone()
+    if a is None or b is None or a["id"] == b["id"]:
+        return render(request, "learn/_index_body.html", _index_ctx(conn))
+    name = name.strip() or f"{a['name']} + {b['name']}"
+    with conn:
+        base = conn.execute(
+            "SELECT COALESCE(MAX(position), -1) + 1 AS p FROM nodes WHERE track_id = ?",
+            (a["id"],),
+        ).fetchone()["p"]
+        for i, n in enumerate(
+            conn.execute(
+                "SELECT * FROM nodes WHERE track_id = ? ORDER BY position, id",
+                (b["id"],),
+            ).fetchall()
+        ):
+            slug, k = n["slug"], 1
+            while conn.execute(
+                "SELECT 1 FROM nodes WHERE track_id = ? AND slug = ?", (a["id"], slug)
+            ).fetchone():
+                k += 1
+                slug = f"{n['slug']}-{k}"
+            conn.execute(
+                "UPDATE nodes SET track_id = ?, slug = ?, position = ? WHERE id = ?",
+                (a["id"], slug, base + i, n["id"]),
+            )
+        conn.execute(
+            "UPDATE resources SET track_id = ? WHERE track_id = ?", (a["id"], b["id"])
+        )
+        conn.execute(
+            "UPDATE suggestions SET track_id = ? WHERE track_id = ?", (a["id"], b["id"])
+        )
+        notes = "\n\n".join(x for x in (a["notes"], b["notes"]) if x)
+        conn.execute(
+            "UPDATE tracks SET name = ?, notes = ? WHERE id = ?", (name, notes, a["id"])
+        )
+        conn.execute("DELETE FROM tracks WHERE id = ?", (b["id"],))
+    # The merged track is user-owned now; seed sync must not rename it back
+    # or rebuild the absorbed one.
+    _retire_slug(conn, a["slug"])
+    _retire_slug(conn, b["slug"])
+    return render(request, "learn/_index_body.html", _index_ctx(conn))
+
+
 @router.post("/log-today")
 def log_today(request: Request, conn=Depends(get_conn)):
     learnmeta.log_day(conn, "manual")
@@ -307,7 +378,7 @@ async def import_upload(request: Request, conn=Depends(get_conn), file: UploadFi
     rows = chat_import.parse_export(data)
     if not rows:
         return _import_redirect(
-            "Could not find conversations in that file. Upload conversations.json or the export zip."
+            "could not find conversations in that file. upload conversations.json or the export zip."
         )
     with conn:
         conn.execute("DELETE FROM imported_chats WHERE status = 'new'")
@@ -316,7 +387,7 @@ async def import_upload(request: Request, conn=Depends(get_conn), file: UploadFi
                 "INSERT INTO imported_chats (title, chat_created, digest) VALUES (?, ?, ?)",
                 (r["title"], r["created"], r["digest"]),
             )
-    return _import_redirect(f"Found {len(rows)} conversations. Pick the learning ones.")
+    return _import_redirect(f"found {len(rows)} conversations. pick the learning ones.")
 
 
 @router.post("/import/act")
@@ -329,7 +400,7 @@ def import_act(
     q: str = Form(""),
 ):
     if not chat_ids:
-        return _import_redirect("Nothing selected.", q)
+        return _import_redirect("nothing selected.", q)
     marks = ",".join("?" for _ in chat_ids)
     chats = conn.execute(
         f"SELECT * FROM imported_chats WHERE status = 'new' AND id IN ({marks})",
@@ -342,12 +413,12 @@ def import_act(
                 f"UPDATE imported_chats SET status = 'dismissed' WHERE id IN ({marks})",
                 chat_ids,
             )
-        return _import_redirect(f"Dismissed {len(chats)}.", q)
+        return _import_redirect(f"dismissed {len(chats)}.", q)
 
     if action == "add":
         track = conn.execute("SELECT * FROM tracks WHERE id = ?", (track_id,)).fetchone()
         if track is None:
-            return _import_redirect("Pick a track first.", q)
+            return _import_redirect("pick a track first.", q)
         with conn:
             for c in chats:
                 create_node(conn, track_id, c["title"], c["digest"], "user", [])
@@ -355,12 +426,12 @@ def import_act(
                 f"UPDATE imported_chats SET status = 'used' WHERE id IN ({marks})",
                 chat_ids,
             )
-        return _import_redirect(f"Added {len(chats)} items to {track['name']}.", q)
+        return _import_redirect(f"added {len(chats)} items to {track['name']}.", q)
 
     if action == "map":
         settings = request.app.state.settings
         if not settings.ai_enabled:
-            return _import_redirect("Set ANTHROPIC_API_KEY to map with Claude.", q)
+            return _import_redirect("set anthropic_api_key to map with claude.", q)
         tracks = []
         track_ids = {}
         for t in conn.execute("SELECT * FROM tracks ORDER BY position, name"):
@@ -399,7 +470,7 @@ def import_act(
         if not inserted:
             return _import_redirect("No mappings this time. Try fewer, clearer chats.", q)
         return _import_redirect(
-            f"Created {inserted} suggestions. Review them on their track pages in Learn.", q
+            f"created {inserted} suggestions. review them on their track pages in learn.", q
         )
 
     return _import_redirect("Unknown action.", q)

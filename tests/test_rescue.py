@@ -15,7 +15,7 @@ def test_one_suggestion_at_a_time(client, app_db):
     _add(client, "shower")
     _add(client, "walk")
     html = client.get("/rescue").text
-    assert html.count("Try this") == 1
+    assert html.count("try this") == 1
 
 
 def test_try_then_outcome_updates_record(client, app_db):

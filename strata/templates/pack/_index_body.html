@@ -30,7 +30,7 @@
 {% endif %}
 
 <section class="card">
-  <h2>Templates</h2>
+  <h2>templates</h2>
   <form class="add" hx-post="/pack/templates" hx-target="#pack-body" autocomplete="off">
     <input type="hidden" name="kind" value="{{ kind }}">
     <input type="text" name="name" placeholder="{{ 'new template' if kind == 'pack' else 'new list' }}">

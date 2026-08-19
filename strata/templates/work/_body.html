@@ -183,7 +183,7 @@
 
   {% if ws['kind'] == 'school' %}
   {% if s['due_soon'] %}
-  <h3>Due soon, heaviest first per day</h3>
+  <h3>due soon, heaviest first per day</h3>
   <ul class="tasks">
     {% for a in s['due_soon'] %}
     <li>
@@ -205,7 +205,7 @@
       <span class="badge">{{ c['assignments'] | rejectattr('done_at') | list | length }} open</span>
       <button class="quiet" hx-post="/work/classes/{{ c['row']['id'] }}/visibility" hx-target="#work-body">hide</button>
       <button class="quiet danger" hx-post="/work/classes/{{ c['row']['id'] }}/archive" hx-target="#work-body"
-              hx-confirm="Archive {{ c['row']['name'] }}?">archive</button>
+              hx-confirm="archive {{ c['row']['name'] }}?">archive</button>
     </summary>
     <ul class="tasks">
       {% for a in c['assignments'] if not a['done_at'] %}
@@ -253,7 +253,7 @@
 {% endfor %}
 
 <section class="card ghost-card">
-  <h2>Add a work area</h2>
+  <h2>add a work area</h2>
   <form class="add" hx-post="/work/workspaces" hx-target="#work-body" autocomplete="off">
     <input type="text" name="name" placeholder="name" required>
     <span class="seg">

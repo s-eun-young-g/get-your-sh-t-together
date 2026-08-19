@@ -23,12 +23,27 @@ from .frontier import add_edge
 log = logging.getLogger("strata.seed_sync")
 
 
+def retired_slugs(conn: sqlite3.Connection) -> set[str]:
+    """Seed tracks the user deleted or merged away; sync leaves them dead."""
+    try:
+        row = conn.execute(
+            "SELECT value FROM prefs WHERE key = 'retired_tracks'"
+        ).fetchone()
+    except sqlite3.Error:
+        return set()
+    return set(filter(None, (row["value"] if row else "").split(",")))
+
+
 def sync_all(conn: sqlite3.Connection, seeds_dir: Path) -> None:
     if not seeds_dir.is_dir():
         return
+    retired = retired_slugs(conn)
     for path in sorted(seeds_dir.glob("*.yaml")):
         try:
-            sync_track(conn, yaml.safe_load(path.read_text()))
+            data = yaml.safe_load(path.read_text())
+            if data["slug"] in retired:
+                continue
+            sync_track(conn, data)
         except Exception:
             log.warning("seed sync failed for %s, skipping", path.name, exc_info=True)
 

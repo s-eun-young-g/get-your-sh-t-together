@@ -9,7 +9,7 @@
 {% endif %}
 
 <section class="card">
-  <h2>Today</h2>
+  <h2>today</h2>
   {% if gcal_today %}
   <ul class="tasks">
     {% for e in gcal_today %}
@@ -41,7 +41,7 @@
 </section>
 
 <details class="drawer">
-  <summary>Frog pen <span class="badge">{{ nuisances | length }}</span>
+  <summary>frog pen <span class="badge">{{ nuisances | length }}</span>
     {% if nuisances %}<a class="quiet-link" href="/now/blitz">blitz</a>{% endif %}
     <span class="subline">eat the frog</span>
   </summary>

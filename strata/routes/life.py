@@ -143,9 +143,8 @@ def life_ctx(
             else ""
         ),
         "bill_modes": BILL_MODES,
-        "cards": conn.execute(
-            "SELECT * FROM credit_cards WHERE archived_at IS NULL ORDER BY position, id"
-        ).fetchall(),
+        "cards": lifeops.active_cards(conn),
+        "card_usages": lifeops.CARD_USAGES,
         "appointments": lifeops.open_appointments(conn),
         "gcal_week": gcal.events(settings) if settings else [],
         "grocery_runs": conn.execute(
@@ -188,7 +187,7 @@ def create_plan(
     name: str = Form(""),
     start_time: str = Form(""),
 ):
-    name = name.strip() or "Tonight"
+    name = name.strip() or "tonight"
     with conn:
         cur = conn.execute(
             "INSERT INTO evening_plans (name, start_time) VALUES (?, ?)",
@@ -345,17 +344,34 @@ def add_card(
     conn=Depends(get_conn),
     name: str = Form(...),
     use_for: str = Form(""),
-    wins: str = Form(""),
+    due: str = Form(""),
+    usage: str = Form("occasion"),
 ):
     name = name.strip()
+    if usage not in {u for u, _ in lifeops.CARD_USAGES}:
+        usage = "occasion"
     if name:
         pos = conn.execute(
             "SELECT COALESCE(MAX(position), -1) + 1 AS p FROM credit_cards"
         ).fetchone()["p"]
         with conn:
             conn.execute(
-                "INSERT INTO credit_cards (name, use_for, wins, position) VALUES (?, ?, ?, ?)",
-                (name, use_for.strip(), wins.strip(), pos),
+                "INSERT INTO credit_cards (name, use_for, due_date, usage, position)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (name, use_for.strip(), _valid_date(due) if due.strip() else None,
+                 usage, pos),
+            )
+    return _body(request, conn)
+
+
+@router.post("/cards/{card_id}/usage")
+def card_usage(
+    request: Request, card_id: int, conn=Depends(get_conn), usage: str = Form(...)
+):
+    if usage in {u for u, _ in lifeops.CARD_USAGES}:
+        with conn:
+            conn.execute(
+                "UPDATE credit_cards SET usage = ? WHERE id = ?", (usage, card_id)
             )
     return _body(request, conn)
 

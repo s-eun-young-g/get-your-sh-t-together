@@ -479,11 +479,11 @@ def archive_agenda(request: Request, agenda_id: int, conn=Depends(get_conn)):
 def canvas_sync(request: Request, conn=Depends(get_conn)):
     settings = request.app.state.settings
     if not settings.canvas_enabled:
-        return _body(request, conn, canvas_result="Canvas is not configured.")
+        return _body(request, conn, canvas_result="canvas is not configured.")
     ws = workspaces.first_of_kind(conn, "school")
     if ws is None:
         with conn:
-            ws_id = workspaces.create(conn, "School", "school")
+            ws_id = workspaces.create(conn, "school", "school")
     else:
         ws_id = ws["id"]
     result = canvas.sync(conn, settings.canvas_base_url, settings.canvas_token, workspace_id=ws_id)
@@ -491,7 +491,7 @@ def canvas_sync(request: Request, conn=Depends(get_conn)):
         msg = result["error"]
     else:
         msg = (
-            f"Synced: {result['new']} new, {result['updated']} updated"
+            f"synced: {result['new']} new, {result['updated']} updated"
             f"{', ' + str(result['classes']) + ' new classes' if result['classes'] else ''}."
         )
     return _body(request, conn, canvas_result=msg)

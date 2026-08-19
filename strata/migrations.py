@@ -548,4 +548,14 @@ MIGRATIONS: list[tuple[int, str]] = [
         );
         """,
     ),
+    (
+        26,
+        """
+        -- Credit cards drop the strategy notes for operational facts:
+        -- when the payment is due and how much the card gets used.
+        ALTER TABLE credit_cards ADD COLUMN due_date TEXT;
+        ALTER TABLE credit_cards ADD COLUMN usage TEXT NOT NULL DEFAULT 'occasion'
+          CHECK (usage IN ('daily','occasion','dead'));
+        """,
+    ),
 ]

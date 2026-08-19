@@ -77,7 +77,7 @@ def test_ready_act_and_regret_ledger(client, app_db):
     client.post(f"/pause/impulses/{iid}/act")
     row = app_db.execute("SELECT * FROM impulses").fetchone()
     assert row["status"] == "acted" and row["acted_at"]
-    assert "How did it go?" in client.get("/pause").text
+    assert "how did it go?" in client.get("/pause").text
 
     client.post(f"/pause/impulses/{iid}/regret", data={"regret": "1"})
     s = stats(app_db)

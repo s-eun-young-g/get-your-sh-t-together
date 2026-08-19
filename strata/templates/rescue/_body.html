@@ -1,6 +1,6 @@
 {% for p in pending %}
 <section class="card frog-card">
-  <h2>You tried: {{ p['title'] }}</h2>
+  <h2>you tried: {{ p['title'] }}</h2>
   <p class="empty">did it help at all, even a little, even forced?</p>
   <div class="row actions">
     <button hx-post="/rescue/items/{{ p['id'] }}/outcome" hx-vals='{"helped":1}' hx-target="#rescue-body">it helped</button>
@@ -11,7 +11,7 @@
 
 {% if suggestion %}
 <section class="card blitz-card rescue-card">
-  <h2>Try this</h2>
+  <h2>try this</h2>
   <p class="blitz-title">{{ suggestion['title'] }}</p>
   <p class="age">{{ suggestion['record'] }}</p>
   {% if suggestion['helped'] %}
@@ -26,13 +26,13 @@
 </section>
 {% elif not pending %}
 <section class="card">
-  <h2>Your rescue list</h2>
+  <h2>your rescue list</h2>
   <p class="empty">fill this on a good day: things that have ever cut through the nothing, even once. future you, on the couch at 9pm feeling flat, will not be able to think of a single one. this list remembers instead.</p>
 </section>
 {% endif %}
 
 <section class="card">
-  <h2>The list</h2>
+  <h2>the list</h2>
   {% if items %}
   <ul class="tasks">
     {% for i in items %}

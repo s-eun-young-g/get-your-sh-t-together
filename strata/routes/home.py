@@ -325,7 +325,7 @@ def login(request: Request, password: str = Form("")):
             max_age=60 * 60 * 24 * 90,
         )
         return resp
-    return render(request, "login.html", {"error": "That is not the password."}, 401)
+    return render(request, "login.html", {"error": "that is not the password."}, 401)
 
 
 @router.post("/logout")

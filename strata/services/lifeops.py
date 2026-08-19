@@ -110,6 +110,32 @@ def mark_bill_paid(conn: sqlite3.Connection, bill_id: int) -> None:
             )
 
 
+CARD_USAGES = [("daily", "daily"), ("occasion", "on occasion"), ("dead", "dead")]
+
+
+def decorate_card(row: sqlite3.Row) -> dict:
+    d = dict(row)
+    d["usage_label"] = dict(CARD_USAGES).get(d["usage"], d["usage"])
+    d["due_label"] = ""
+    if d["due_date"]:
+        # Card payments come monthly; a passed date rolls to the next cycle.
+        due = date.fromisoformat(d["due_date"])
+        while due < date.today():
+            due = add_months(due, 1)
+        days = (due - date.today()).days
+        d["due_label"] = "payment due today" if days == 0 else f"payment in {days}d"
+    return d
+
+
+def active_cards(conn: sqlite3.Connection) -> list[dict]:
+    rows = conn.execute(
+        "SELECT * FROM credit_cards WHERE archived_at IS NULL"
+        " ORDER BY CASE usage WHEN 'daily' THEN 0 WHEN 'occasion' THEN 1 ELSE 2 END,"
+        " position, id"
+    ).fetchall()
+    return [decorate_card(r) for r in rows]
+
+
 def open_appointments(conn: sqlite3.Connection) -> dict:
     rows = conn.execute(
         "SELECT * FROM appointments WHERE resolved_at IS NULL ORDER BY id"

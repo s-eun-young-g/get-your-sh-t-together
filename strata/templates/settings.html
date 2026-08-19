@@ -3,18 +3,18 @@
 {% block capture %}{% endblock %}
 {% block content %}
 <section class="card">
-  <h2>Make it yours</h2>
+  <h2>make it yours</h2>
   <p class="empty">switch on the life sections that match your life. work areas (one per job, school, or side gig) are added and named on the <a href="/work">work</a> page. nothing is deleted when you switch a section off; it just leaves the screen.</p>
   <form class="stack" method="post" action="/settings">
-    <label class="field">Your name
+    <label class="field">your name
       <input type="text" name="name" value="{{ prefs.get('name', '') }}" placeholder="used to say hi on the home page">
     </label>
-    <label class="field">Your horizon
+    <label class="field">your horizon
       <textarea name="manifesto" rows="4" class="manifesto-input"
         placeholder="a few lines on where all this is going. shown on the home page to keep you pointed at it.">{{ prefs.get('manifesto', '') }}</textarea>
     </label>
 
-    <h2>Life sections</h2>
+    <h2>life sections</h2>
     <div class="toggle-row">
       <label class="chk"><input type="checkbox" name="mod_routines" value="1"
         {{ 'checked' if prefs.get('mod_routines', '1') == '1' }}> routines</label>
@@ -46,7 +46,7 @@
       <span class="empty">reusable lists, fresh checklist per run, like packing</span>
     </div>
 
-    <h2>Other</h2>
+    <h2>other</h2>
     <div class="toggle-row">
       <label class="chk"><input type="checkbox" name="mod_pause" value="1"
         {{ 'checked' if prefs.get('mod_pause', '1') == '1' }}> pause</label>
@@ -59,7 +59,7 @@
 </section>
 
 <section class="card">
-  <h2>Bring things in</h2>
+  <h2>bring things in</h2>
   <ul class="plain">
     <li><a href="/learn/import">import chats</a>
       <span class="empty">a chatgpt or claude export, mapped into the learn trees</span></li>

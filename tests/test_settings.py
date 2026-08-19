@@ -3,7 +3,7 @@ LIFE_ON = {"mod_evenings": "1", "mod_packing": "1", "mod_routines": "1"}
 
 def test_default_workspaces_bootstrap(client):
     work = client.get("/work").text
-    assert 'value="Job"' in work and 'value="School"' in work
+    assert 'value="job"' in work and 'value="school"' in work
 
 
 def test_rename_workspace_flows_to_board(client, app_db):
@@ -17,7 +17,7 @@ def test_rename_workspace_flows_to_board(client, app_db):
 def test_multiple_jobs_each_get_a_section(client, app_db):
     client.post("/work/workspaces", data={"name": "Freelance", "kind": "job"})
     work = client.get("/work").text
-    assert 'value="Job"' in work and 'value="Freelance"' in work
+    assert 'value="job"' in work and 'value="Freelance"' in work
     assert app_db.execute(
         "SELECT COUNT(*) AS n FROM workspaces WHERE kind = 'job' AND archived_at IS NULL"
     ).fetchone()["n"] == 2
@@ -30,7 +30,7 @@ def test_archive_workspace_keeps_tasks(client, app_db):
         data={"title": "keep me", "due_date": "2030-01-05", "effort_minutes": "30", "dread": "1"},
     )
     client.post(f"/work/workspaces/{ws}/archive")
-    assert 'value="Job"' not in client.get("/work").text
+    assert 'value="job" aria-label="workspace name"' not in client.get("/work").text
     row = app_db.execute("SELECT * FROM tasks WHERE title = 'keep me'").fetchone()
     assert row is not None
 
@@ -43,7 +43,7 @@ def test_name_greeting(client):
 def test_life_toggles_hide_sections_and_nav(client):
     client.post("/settings", data={"name": "", "mod_evenings": "1"})
     life = client.get("/life").text
-    assert "Evening plan" in life
+    assert "<h2>evening plan</h2>" in life
     assert "Routines" not in life and "Packing" not in life
     assert 'href="/life"' in client.get("/now").text
 

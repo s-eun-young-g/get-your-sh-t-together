@@ -47,7 +47,7 @@ def test_blitz_flow(client, app_db):
     assert "email landlord" in html
     tid = app_db.execute("SELECT id FROM tasks").fetchone()["id"]
     r = client.post(f"/now/tasks/{tid}/done", data={"frame": "blitz"})
-    assert "Pen is clear" in r.text
+    assert "pen is clear" in r.text
 
 
 def test_snooze_route_sets_date(client, app_db):

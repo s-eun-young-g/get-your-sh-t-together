@@ -53,6 +53,25 @@
     {% else %}
     <p class="empty">all caught up.</p>
     {% endif %}
+
+    <div class="row spread bucket-actions">
+      {% if tracks | length > 1 %}
+      <details class="subcat">
+        <summary>merge with another</summary>
+        <form class="add" hx-post="/learn/tracks/{{ t['row']['id'] }}/merge" hx-target="#learn-body" autocomplete="off">
+          <span class="seg">
+            {% for o in tracks %}{% if o['row']['id'] != t['row']['id'] %}
+            <label><input type="radio" name="other_id" value="{{ o['row']['id'] }}"><span>{{ o['row']['name'] }}</span></label>
+            {% endif %}{% endfor %}
+          </span>
+          <input type="text" name="name" placeholder="new name, or blank to join both">
+          <button type="submit" class="quiet">merge</button>
+        </form>
+      </details>
+      {% else %}<span></span>{% endif %}
+      <button class="quiet danger" hx-post="/learn/tracks/{{ t['row']['id'] }}/delete" hx-target="#learn-body"
+              hx-confirm="delete {{ t['row']['name'] }} and everything in it?">delete</button>
+    </div>
   </section>
   {% endfor %}
 </div>

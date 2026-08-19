@@ -1,5 +1,5 @@
 <section class="card">
-  <h2>Catch an impulse</h2>
+  <h2>catch an impulse</h2>
   <p class="empty">I know you want to do it. but should you?</p>
   <form class="stack" hx-post="/pause/impulses" hx-target="#pause-body" autocomplete="off">
     <input type="text" name="title" placeholder="the thing" required>
@@ -23,7 +23,7 @@
 
 {% if waiting %}
 <section class="card">
-  <h2>Parked</h2>
+  <h2>parked</h2>
   <ul class="tasks">
     {% for i in waiting %}
     <li>
@@ -43,7 +43,7 @@
 
 {% if unlogged %}
 <section class="card">
-  <h2>How did it go?</h2>
+  <h2>how did it go?</h2>
   <p class="empty">you acted on these. honest answers make the timers smarter than willpower.</p>
   <ul class="tasks">
     {% for i in unlogged %}

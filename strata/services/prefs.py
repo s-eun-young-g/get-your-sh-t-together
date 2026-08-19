@@ -11,8 +11,8 @@ import sqlite3
 DEFAULTS = {
     "name": "",
     "manifesto": "",
-    "job_label": "Job",
-    "school_label": "School",
+    "job_label": "job",
+    "school_label": "school",
     # Section toggles: "1" on, "0" off. All on by default; the settings page
     # is where a new user shapes the app to their life (no survey needed).
     "mod_job": "1",

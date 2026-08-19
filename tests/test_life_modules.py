@@ -57,9 +57,9 @@ def test_life_module_toggles(client):
     client.post("/settings", data={"name": "", "mod_evenings": "1"})
     life = client.get("/life").text
     assert "show all recurring" not in life  # section gone; its re-add button may remain
-    assert "Appointments" not in life
+    assert "<h2>appointments</h2>" not in life
     assert "groceries" not in life
-    assert "Evening plan" in life
+    assert "<h2>evening plan</h2>" in life
 
 
 def test_bad_dates_are_rejected_calmly(client, app_db):
@@ -113,15 +113,28 @@ def test_financials_upcoming_vs_hidden(client, app_db):
 
 
 def test_credit_cards(client, app_db):
+    due = (date.today() + timedelta(days=12)).isoformat()
     client.post(
         "/life/cards",
-        data={"name": "sapphire", "use_for": "dining, flights", "wins": "3x points, lounge"},
+        data={"name": "sapphire", "use_for": "dining, flights", "due": due, "usage": "daily"},
     )
     life = client.get("/life").text
-    assert "sapphire" in life and "use for: dining, flights" in life and "wins: 3x points" in life
+    assert "sapphire" in life and "use for: dining, flights" in life
+    assert "payment in 12d" in life and ">daily</span>" in life
     cid = app_db.execute("SELECT id FROM credit_cards").fetchone()["id"]
+    client.post(f"/life/cards/{cid}/usage", data={"usage": "dead"})
+    assert app_db.execute("SELECT usage FROM credit_cards").fetchone()["usage"] == "dead"
     client.post(f"/life/cards/{cid}/delete")
     assert "sapphire" not in client.get("/life").text
+
+
+def test_card_due_date_rolls_monthly(client, app_db):
+    from strata.services.lifeops import active_cards
+
+    stale = (date.today() - timedelta(days=45)).isoformat()
+    client.post("/life/cards", data={"name": "amex", "due": stale, "usage": "occasion"})
+    c = active_cards(app_db)[0]
+    assert "payment" in c["due_label"] and "overdue" not in c["due_label"]
 
 
 def test_autopay_bill_stays_off_home(client, app_db):

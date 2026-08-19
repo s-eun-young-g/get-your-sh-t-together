@@ -116,7 +116,7 @@ def test_manifesto_on_home(client):
 
 def test_home_is_the_board(client):
     home = client.get("/").text
-    assert ">Today</h2>" in home and "Frog pen" in home
+    assert ">today</h2>" in home and "frog pen" in home
     assert ">Next</h2>" not in home
     assert 'href="/now/sort"' in home and ">clear<" in home  # inbox tile, empty state
     client.post("/capture", data={"title": "loose thought"})
@@ -167,3 +167,69 @@ def test_add_track_from_index(client, app_db):
         for row in app_db.execute("SELECT slug FROM tracks WHERE name = 'pottery'").fetchall()
     )
     assert slugs == ["pottery", "pottery-2"]
+
+
+def test_delete_track_stays_deleted(client, app_db):
+    from strata.app import SEEDS_DIR
+    from strata.services.seed_sync import sync_all
+
+    t = app_db.execute("SELECT * FROM tracks WHERE slug = 'hardware'").fetchone()
+    client.post(f"/learn/tracks/{t['id']}/delete")
+    assert app_db.execute(
+        "SELECT COUNT(*) AS n FROM tracks WHERE slug = 'hardware'"
+    ).fetchone()["n"] == 0
+    assert app_db.execute(
+        "SELECT COUNT(*) AS n FROM nodes WHERE track_id = ?", (t["id"],)
+    ).fetchone()["n"] == 0
+    sync_all(app_db, SEEDS_DIR)  # a fresh seed sync must not resurrect it
+    assert app_db.execute(
+        "SELECT COUNT(*) AS n FROM tracks WHERE slug = 'hardware'"
+    ).fetchone()["n"] == 0
+
+
+def test_merge_tracks_joins_names_and_nodes(client, app_db):
+    a = app_db.execute("SELECT * FROM tracks WHERE slug = 'hardware'").fetchone()
+    b = app_db.execute("SELECT * FROM tracks WHERE slug = 'software'").fetchone()
+    n_a = app_db.execute(
+        "SELECT COUNT(*) AS n FROM nodes WHERE track_id = ?", (a["id"],)
+    ).fetchone()["n"]
+    n_b = app_db.execute(
+        "SELECT COUNT(*) AS n FROM nodes WHERE track_id = ?", (b["id"],)
+    ).fetchone()["n"]
+    done_node = app_db.execute(
+        "SELECT id FROM nodes WHERE track_id = ? LIMIT 1", (b["id"],)
+    ).fetchone()["id"]
+    client.post(f"/learn/nodes/{done_node}/done")
+
+    r = client.post(f"/learn/tracks/{a['id']}/merge", data={"other_id": str(b["id"])})
+    assert f"{a['name']} + {b['name']}" in r.text
+    merged = app_db.execute("SELECT * FROM tracks WHERE id = ?", (a["id"],)).fetchone()
+    assert merged["name"] == f"{a['name']} + {b['name']}"
+    assert app_db.execute(
+        "SELECT COUNT(*) AS n FROM tracks WHERE id = ?", (b["id"],)
+    ).fetchone()["n"] == 0
+    assert app_db.execute(
+        "SELECT COUNT(*) AS n FROM nodes WHERE track_id = ?", (a["id"],)
+    ).fetchone()["n"] == n_a + n_b
+    assert app_db.execute(
+        "SELECT done_at FROM nodes WHERE id = ?", (done_node,)
+    ).fetchone()["done_at"]  # progress survives the merge
+
+
+def test_merge_with_custom_name(client, app_db):
+    a = app_db.execute("SELECT * FROM tracks WHERE slug = 'hardware'").fetchone()
+    b = app_db.execute("SELECT * FROM tracks WHERE slug = 'software'").fetchone()
+    client.post(
+        f"/learn/tracks/{a['id']}/merge",
+        data={"other_id": str(b["id"]), "name": "systems"},
+    )
+    assert app_db.execute(
+        "SELECT name FROM tracks WHERE id = ?", (a["id"],)
+    ).fetchone()["name"] == "systems"
+
+
+def test_merge_without_pick_is_a_noop(client, app_db):
+    a = app_db.execute("SELECT * FROM tracks WHERE slug = 'hardware'").fetchone()
+    before = app_db.execute("SELECT COUNT(*) AS n FROM tracks").fetchone()["n"]
+    client.post(f"/learn/tracks/{a['id']}/merge", data={"name": "whatever"})
+    assert app_db.execute("SELECT COUNT(*) AS n FROM tracks").fetchone()["n"] == before
