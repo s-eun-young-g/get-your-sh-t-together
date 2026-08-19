@@ -209,3 +209,13 @@ def test_bad_amount_is_dropped(client, app_db):
         "name": "rent", "next_due": due, "every_months": "1", "amount": "idk",
     })
     assert app_db.execute("SELECT amount FROM bills").fetchone()["amount"] is None
+
+
+def test_bill_mode_retag(client, app_db):
+    due = date.today().isoformat()
+    client.post("/life/bills", data={"name": "spotify", "next_due": due, "every_months": "1"})
+    bid = app_db.execute("SELECT id FROM bills").fetchone()["id"]
+    client.post(f"/life/bills/{bid}/mode", data={"mode": "auto"})
+    assert app_db.execute("SELECT mode FROM bills").fetchone()["mode"] == "auto"
+    client.post(f"/life/bills/{bid}/mode", data={"mode": "nonsense"})
+    assert app_db.execute("SELECT mode FROM bills").fetchone()["mode"] == "auto"

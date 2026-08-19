@@ -298,6 +298,16 @@ def bill_paid(
     return _body(request, conn)
 
 
+@router.post("/bills/{bill_id}/mode")
+def bill_mode(
+    request: Request, bill_id: int, conn=Depends(get_conn), mode: str = Form(...)
+):
+    if mode in {m for m, _ in BILL_MODES}:
+        with conn:
+            conn.execute("UPDATE bills SET mode = ? WHERE id = ?", (mode, bill_id))
+    return _body(request, conn)
+
+
 @router.post("/bills/{bill_id}/keep")
 def bill_keep(request: Request, bill_id: int, conn=Depends(get_conn)):
     # Keeping a renewal just moves the decision to the next cycle.

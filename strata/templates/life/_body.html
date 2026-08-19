@@ -111,6 +111,11 @@
         {% if b['amount_label'] %}<span class="age">{{ b['amount_label'] }}</span>{% endif %}
         <span class="age">{{ b['due_label'] }}, {% if b['every_months'] %}every {{ b['every_months'] }}mo{% else %}one time{% endif %}, {{ b['mode_label'] }}</span>
         <span class="row-actions">
+          {% for v, label in bill_modes %}
+          {% if v != b['mode'] %}
+          <button class="quiet" hx-post="/life/bills/{{ b['id'] }}/mode" hx-vals='{"mode":"{{ v }}"}' hx-target="#life-body">{{ label }}</button>
+          {% endif %}
+          {% endfor %}
           <button class="quiet danger" hx-post="/life/bills/{{ b['id'] }}/delete" hx-target="#life-body">drop</button>
         </span>
       </li>
