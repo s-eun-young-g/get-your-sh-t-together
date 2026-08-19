@@ -8,23 +8,6 @@
 </form>
 {% endif %}
 
-{% if daily_nuisance %}
-<section class="card frog-card">
-  <h2>Eat the frog</h2>
-  <div class="row">
-    <button class="tick" hx-post="/now/tasks/{{ daily_nuisance['id'] }}/done"
-            hx-vals='{"frame":"home"}' hx-target="#home-blocks" aria-label="done"></button>
-    <span class="frog-title">{{ daily_nuisance['title'] }}</span>
-    <span class="age">waiting {{ daily_nuisance['created_at'] | age_days }}d</span>
-  </div>
-  <div class="row actions">
-    <button class="quiet" hx-post="/now/tasks/{{ daily_nuisance['id'] }}/snooze"
-            hx-vals='{"frame":"home","days":1}' hx-target="#home-blocks">not today</button>
-    <a class="quiet-link" href="/now/blitz">blitz the rest</a>
-  </div>
-</section>
-{% endif %}
-
 <section class="card">
   <h2>Today</h2>
   {% if today_items %}
@@ -47,7 +30,7 @@
 </section>
 
 <details class="drawer">
-  <summary>Frog pen <span class="badge">{{ nuisances | length }}</span>
+  <summary>Frog pen <span class="summary">eat the frog</span> <span class="badge">{{ nuisances | length }}</span>
     {% if nuisances %}<a class="quiet-link" href="/now/blitz">blitz</a>{% endif %}
   </summary>
   {% if nuisances %}

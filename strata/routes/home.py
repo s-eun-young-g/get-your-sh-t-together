@@ -248,7 +248,6 @@ def build_home_ctx(conn: sqlite3.Connection, prefs: dict | None = None) -> dict:
         f" AND done_at IS NULL AND updated_at <= datetime('now', '-{now_routes.STALE_DAYS} days')"
     ).fetchone()["n"]
     return {
-        "daily_nuisance": now_routes.next_nuisance(conn),
         "today_items": _today_digest(conn, prefs),
         "inbox": inbox,
         "nuisances": now_routes.nuisance_pen(conn),

@@ -182,8 +182,6 @@ details.drawer summary::marker { color: var(--faint); }
   padding: 1.05rem 1.15rem 1.15rem;
 }
 .frog-card h2 { color: var(--accent-ink); }
-.frog-title { font-size: 1.2rem; font-weight: 700; }
-
 .ghost-card { background: radial-gradient(150% 95% at 6% 0%, color-mix(in srgb, var(--page-hue) 7%, transparent), transparent 60%); }
 .ghost-card h2 { color: var(--muted); }
 .card.mini {
