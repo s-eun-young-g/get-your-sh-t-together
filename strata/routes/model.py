@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import Response
+from fastapi.responses import RedirectResponse, Response
 
 from ..deps import get_conn, render, reindex
 
@@ -51,6 +51,39 @@ def _board_ctx(conn: sqlite3.Connection, board_id: int) -> dict:
     return {"board": board, "tree": tree, "flat": flat}
 
 
+def _find_node(nodes, bucket_id):
+    for n in nodes:
+        if n["row"]["id"] == bucket_id:
+            return n
+        hit = _find_node(n["children"], bucket_id)
+        if hit:
+            return hit
+    return None
+
+
+def _trail(conn, bucket_id):
+    # Ancestor rows, root-first, excluding the bucket itself.
+    rows = []
+    cur = conn.execute("SELECT * FROM buckets WHERE id = ?", (bucket_id,)).fetchone()
+    while cur and cur["parent_id"] is not None:
+        cur = conn.execute("SELECT * FROM buckets WHERE id = ?", (cur["parent_id"],)).fetchone()
+        rows.append(cur)
+    return list(reversed(rows))
+
+
+def _render_model(request, conn, board_id, view_bucket=0, error=""):
+    ctx = _board_ctx(conn, board_id)
+    ctx["error"] = error
+    if view_bucket:
+        node = _find_node(ctx["tree"], view_bucket)
+        if node is None:
+            return Response(headers={"HX-Redirect": f"/model/boards/{board_id}"})
+        ctx["node"] = node
+        ctx["trail"] = _trail(conn, view_bucket)
+        return render(request, "model/_category_body.html", ctx)
+    return render(request, "model/_columns.html", ctx)
+
+
 @router.get("")
 def boards_index(request: Request, conn=Depends(get_conn)):
     boards = conn.execute(
@@ -62,7 +95,7 @@ def boards_index(request: Request, conn=Depends(get_conn)):
 
 @router.post("/boards")
 def create_board(request: Request, conn=Depends(get_conn), name: str = Form(...)):
-    name = name.strip() or "Untitled board"
+    name = name.strip() or "untitled model"
     with conn:
         board_id = conn.execute("INSERT INTO boards (name) VALUES (?)", (name,)).lastrowid
     return Response(headers={"HX-Redirect": f"/model/boards/{board_id}"})
@@ -73,6 +106,18 @@ def board_page(request: Request, board_id: int, conn=Depends(get_conn)):
     return render(request, "model/board.html", _board_ctx(conn, board_id))
 
 
+@router.get("/categories/{bucket_id}")
+def category_page(request: Request, bucket_id: int, conn=Depends(get_conn)):
+    b = conn.execute("SELECT * FROM buckets WHERE id = ?", (bucket_id,)).fetchone()
+    if b is None:
+        return RedirectResponse("/model", status_code=303)
+    ctx = _board_ctx(conn, b["board_id"])
+    ctx["node"] = _find_node(ctx["tree"], bucket_id)
+    ctx["trail"] = _trail(conn, bucket_id)
+    ctx["error"] = ""
+    return render(request, "model/category.html", ctx)
+
+
 @router.post("/boards/{board_id}/buckets")
 def add_bucket(
     request: Request,
@@ -80,6 +125,7 @@ def add_bucket(
     conn=Depends(get_conn),
     name: str = Form(...),
     parent_id: int = Form(0),
+    view_bucket: int = Form(0),
 ):
     name = name.strip()
     if name:
@@ -94,23 +140,32 @@ def add_bucket(
                 " VALUES (?, ?, ?, ?)",
                 (board_id, name, pos, parent_id or None),
             )
-    return render(request, "model/_columns.html", _board_ctx(conn, board_id))
+    return _render_model(request, conn, board_id, view_bucket)
 
 
 @router.post("/buckets/{bucket_id}/rename")
-def rename_bucket(request: Request, bucket_id: int, conn=Depends(get_conn), name: str = Form(...)):
+def rename_bucket(
+    request: Request,
+    bucket_id: int,
+    conn=Depends(get_conn),
+    name: str = Form(...),
+    view_bucket: int = Form(0),
+):
     b = conn.execute("SELECT board_id FROM buckets WHERE id = ?", (bucket_id,)).fetchone()
     if name.strip():
         with conn:
             conn.execute("UPDATE buckets SET name = ? WHERE id = ?", (name.strip(), bucket_id))
-    return render(request, "model/_columns.html", _board_ctx(conn, b["board_id"]))
+    return _render_model(request, conn, b["board_id"], view_bucket)
 
 
 @router.post("/buckets/{bucket_id}/delete")
-def delete_bucket(request: Request, bucket_id: int, conn=Depends(get_conn)):
+def delete_bucket(
+    request: Request, bucket_id: int, conn=Depends(get_conn), view_bucket: int = Form(0)
+):
     b = conn.execute("SELECT * FROM buckets WHERE id = ?", (bucket_id,)).fetchone()
     board_id = b["board_id"]
     error = ""
+    deleted = False
     has_children = conn.execute(
         "SELECT 1 FROM buckets WHERE parent_id = ?", (bucket_id,)
     ).fetchone()
@@ -118,7 +173,7 @@ def delete_bucket(request: Request, bucket_id: int, conn=Depends(get_conn)):
         "SELECT COUNT(*) AS n FROM cards WHERE bucket_id = ?", (bucket_id,)
     ).fetchone()["n"]
     if has_children:
-        error = "this bucket has sub-buckets; delete or move those first."
+        error = "this category has subcategories; delete or move those first."
     else:
         # Cards move up to the parent, or to the first other top-level bucket.
         target = b["parent_id"]
@@ -130,7 +185,7 @@ def delete_bucket(request: Request, bucket_id: int, conn=Depends(get_conn)):
             ).fetchone()
             target = other["id"] if other else None
         if card_count and target is None:
-            error = "its cards need somewhere to go; add another bucket first."
+            error = "its cards need somewhere to go; add another category first."
         else:
             with conn:
                 if card_count:
@@ -151,13 +206,23 @@ def delete_bucket(request: Request, bucket_id: int, conn=Depends(get_conn)):
                             (target, base + i, card["id"]),
                         )
                 conn.execute("DELETE FROM buckets WHERE id = ?", (bucket_id,))
-    ctx = _board_ctx(conn, board_id)
-    ctx["error"] = error
-    return render(request, "model/_columns.html", ctx)
+            deleted = True
+    if deleted and view_bucket == bucket_id:
+        # She deleted the category she was looking at; land on its parent.
+        if b["parent_id"] is not None:
+            return Response(headers={"HX-Redirect": f"/model/categories/{b['parent_id']}"})
+        return Response(headers={"HX-Redirect": f"/model/boards/{board_id}"})
+    return _render_model(request, conn, board_id, view_bucket, error=error)
 
 
 @router.post("/buckets/{bucket_id}/cards")
-def add_card(request: Request, bucket_id: int, conn=Depends(get_conn), title: str = Form(...)):
+def add_card(
+    request: Request,
+    bucket_id: int,
+    conn=Depends(get_conn),
+    title: str = Form(...),
+    view_bucket: int = Form(0),
+):
     b = conn.execute("SELECT board_id FROM buckets WHERE id = ?", (bucket_id,)).fetchone()
     title = title.strip()
     if title:
@@ -170,7 +235,7 @@ def add_card(request: Request, bucket_id: int, conn=Depends(get_conn), title: st
                 "INSERT INTO cards (bucket_id, title, position) VALUES (?, ?, ?)",
                 (bucket_id, title, pos),
             )
-    return render(request, "model/_columns.html", _board_ctx(conn, b["board_id"]))
+    return _render_model(request, conn, b["board_id"], view_bucket)
 
 
 @router.post("/cards/{card_id}/move")
@@ -179,6 +244,7 @@ def move_card(
     card_id: int,
     conn=Depends(get_conn),
     bucket_id: int = Form(...),
+    view_bucket: int = Form(0),
 ):
     card = conn.execute("SELECT bucket_id FROM cards WHERE id = ?", (card_id,)).fetchone()
     target = conn.execute("SELECT board_id FROM buckets WHERE id = ?", (bucket_id,)).fetchone()
@@ -192,18 +258,18 @@ def move_card(
             (bucket_id, pos, card_id),
         )
         reindex(conn, "cards", "bucket_id", card["bucket_id"])
-    return render(request, "model/_columns.html", _board_ctx(conn, target["board_id"]))
+    return _render_model(request, conn, target["board_id"], view_bucket)
 
 
 @router.post("/cards/{card_id}/delete")
-def delete_card(request: Request, card_id: int, conn=Depends(get_conn)):
+def delete_card(request: Request, card_id: int, conn=Depends(get_conn), view_bucket: int = Form(0)):
     row = conn.execute(
         "SELECT b.board_id FROM cards c JOIN buckets b ON b.id = c.bucket_id WHERE c.id = ?",
         (card_id,),
     ).fetchone()
     with conn:
         conn.execute("DELETE FROM cards WHERE id = ?", (card_id,))
-    return render(request, "model/_columns.html", _board_ctx(conn, row["board_id"]))
+    return _render_model(request, conn, row["board_id"], view_bucket)
 
 
 @router.post("/boards/{board_id}/notes")

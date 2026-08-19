@@ -78,21 +78,22 @@
       if (!form.matches || !form.matches("form") || form.checkValidity()) return;
       e.preventDefault();
       e.stopPropagation();
+      if (!form.querySelector(".field-hint")) {
+        var hint = document.createElement("div");
+        hint.className = "field-hint";
+        hint.textContent = "fill this out";
+        form.appendChild(hint);
+      }
       form.querySelectorAll(":invalid").forEach(function (el) {
         el.classList.add("invalid");
-        if (!el.nextElementSibling || !el.nextElementSibling.matches(".field-hint")) {
-          var hint = document.createElement("span");
-          hint.className = "field-hint";
-          hint.textContent = "fill this out";
-          el.insertAdjacentElement("afterend", hint);
-        }
         el.addEventListener("input", function fix() {
           if (el.checkValidity()) {
             el.classList.remove("invalid");
-            if (el.nextElementSibling && el.nextElementSibling.matches(".field-hint")) {
-              el.nextElementSibling.remove();
-            }
             el.removeEventListener("input", fix);
+          }
+          if (form.checkValidity()) {
+            var h = form.querySelector(".field-hint");
+            if (h) h.remove();
           }
         });
       });

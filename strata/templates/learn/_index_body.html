@@ -7,7 +7,13 @@
     <button class="quiet" hx-post="/learn/log-today" hx-target="#learn-body">I learned something today</button>
     {% endif %}
   </span>
-  <a class="quiet-link" href="/learn/import">import</a>
+  <span class="row">
+    <form class="add" hx-post="/learn/tracks" hx-target="#learn-body" autocomplete="off">
+      <input type="text" name="name" placeholder="new category" required>
+      <button type="submit">add</button>
+    </form>
+    <a class="quiet-link" href="/learn/import">import</a>
+  </span>
 </div>
 
 <div class="grid2">

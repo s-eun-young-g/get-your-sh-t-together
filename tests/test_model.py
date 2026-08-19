@@ -25,7 +25,7 @@ def test_sub_buckets_nest(client, app_db):
     sub = app_db.execute("SELECT * FROM buckets WHERE name = 'sentimental'").fetchone()
     assert sub["parent_id"] == take
     html = client.get(f"/model/boards/{board}").text
-    assert 'value="sentimental"' in html
+    assert f'class="cat-title" href="/model/categories/{sub["id"]}">sentimental</a>' in html
     client.post(f"/model/buckets/{take}/cards", data={"title": "old letters"})
     assert "to take / sentimental" in client.get(f"/model/boards/{board}").text
 
@@ -44,7 +44,7 @@ def test_delete_bucket_with_children_blocked(client, app_db):
     board, (take, _) = _board(client, app_db)
     client.post(f"/model/boards/{board}/buckets", data={"name": "books", "parent_id": str(take)})
     r = client.post(f"/model/buckets/{take}/delete")
-    assert "sub-buckets" in r.text
+    assert "subcategories" in r.text
     assert app_db.execute("SELECT COUNT(*) AS n FROM buckets").fetchone()["n"] == 3
 
 
@@ -69,6 +69,53 @@ def test_delete_empty_bucket_always_allowed(client, app_db):
     board, ids = _board(client, app_db, buckets=("only",))
     client.post(f"/model/buckets/{ids[0]}/delete")
     assert app_db.execute("SELECT COUNT(*) AS n FROM buckets").fetchone()["n"] == 0
+
+
+def test_category_page_shows_name_and_crumb(client, app_db):
+    board, (take, _) = _board(client, app_db)
+    client.post(
+        f"/model/boards/{board}/buckets", data={"name": "sentimental", "parent_id": str(take)}
+    )
+    sub = app_db.execute("SELECT id FROM buckets WHERE name = 'sentimental'").fetchone()["id"]
+    r = client.get(f"/model/categories/{sub}")
+    assert r.status_code == 200
+    assert "sentimental" in r.text
+    assert "&larr; The move" in r.text
+    assert f'href="/model/categories/{take}">take</a>' in r.text
+
+
+def test_card_add_with_view_bucket_returns_category_partial(client, app_db):
+    board, (take, _) = _board(client, app_db)
+    r = client.post(
+        f"/model/buckets/{take}/cards",
+        data={"title": "old letters", "view_bucket": str(take)},
+    )
+    assert "&larr;" in r.text
+    assert 'class="columns' not in r.text
+    assert "old letters" in r.text
+
+
+def test_delete_viewed_category_redirects_to_parent(client, app_db):
+    board, (take, _) = _board(client, app_db)
+    client.post(f"/model/boards/{board}/buckets", data={"name": "books", "parent_id": str(take)})
+    sub = app_db.execute("SELECT id FROM buckets WHERE name = 'books'").fetchone()["id"]
+    r = client.post(f"/model/buckets/{sub}/delete", data={"view_bucket": str(sub)})
+    assert r.headers.get("hx-redirect") == f"/model/categories/{take}"
+    r = client.post(f"/model/buckets/{take}/delete", data={"view_bucket": str(take)})
+    assert r.headers.get("hx-redirect") == f"/model/boards/{board}"
+
+
+def test_deep_nesting_collapses_on_board(client, app_db):
+    board, ids = _board(client, app_db, buckets=("keep",))
+    client.post(
+        f"/model/boards/{board}/buckets", data={"name": "midlayer", "parent_id": str(ids[0])}
+    )
+    mid = app_db.execute("SELECT id FROM buckets WHERE name = 'midlayer'").fetchone()["id"]
+    client.post(f"/model/boards/{board}/buckets", data={"name": "deepcat", "parent_id": str(mid)})
+    html = client.get(f"/model/boards/{board}").text
+    assert "deepcat" not in html
+    assert 'class="quiet-link more"' in html
+    assert "deepcat" in client.get(f"/model/categories/{mid}").text
 
 
 def test_notes_autosave(client, app_db):

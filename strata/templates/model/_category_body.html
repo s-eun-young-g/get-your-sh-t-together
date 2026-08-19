@@ -1,0 +1,59 @@
+{% macro cards_list(b) %}
+<ul class="cards bullets">
+  {% for c in b['cards'] %}
+  <li>
+    <span>{{ c['title'] }}</span>
+    <span class="row-actions">
+      {% for other in flat %}
+      {% if other['id'] != b['row']['id'] %}
+      <button class="quiet" hx-post="/model/cards/{{ c['id'] }}/move"
+              hx-vals='{"bucket_id": {{ other['id'] }}, "view_bucket": {{ node['row']['id'] }}}'
+              hx-target="#category-body">to {{ other['path'] | lower }}</button>
+      {% endif %}
+      {% endfor %}
+      <button class="quiet danger" hx-post="/model/cards/{{ c['id'] }}/delete"
+              hx-vals='{"view_bucket": {{ node['row']['id'] }}}' hx-target="#category-body">drop</button>
+    </span>
+  </li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{% macro catnode(b, depth) %}
+<div class="bucket {{ 'sub' if depth }}">
+  {% if depth %}
+  <a class="cat-title" href="/model/categories/{{ b['row']['id'] }}">{{ b['row']['name'] }}</a>
+  {% else %}
+  <form class="bucket-name" hx-post="/model/buckets/{{ b['row']['id'] }}/rename"
+        hx-vals='{"view_bucket": {{ node['row']['id'] }}}' hx-target="#category-body" autocomplete="off">
+    <input type="text" name="name" value="{{ b['row']['name'] }}">
+  </form>
+  {% endif %}
+  {{ cards_list(b) }}
+  <form class="add" hx-post="/model/buckets/{{ b['row']['id'] }}/cards"
+        hx-vals='{"view_bucket": {{ node['row']['id'] }}}' hx-target="#category-body" autocomplete="off">
+    <input type="text" name="title" placeholder="add">
+  </form>
+  {% for child in b['children'] %}{{ catnode(child, depth + 1) }}{% endfor %}
+  <div class="row spread bucket-actions">
+    <details class="subcat">
+      <summary>make a subcategory</summary>
+      <form class="add" hx-post="/model/boards/{{ board['id'] }}/buckets"
+            hx-vals='{"view_bucket": {{ node['row']['id'] }}}' hx-target="#category-body" autocomplete="off">
+        <input type="hidden" name="parent_id" value="{{ b['row']['id'] }}">
+        <input type="text" name="name" placeholder="name it">
+      </form>
+    </details>
+    <button class="quiet danger" hx-post="/model/buckets/{{ b['row']['id'] }}/delete"
+            hx-vals='{"view_bucket": {{ node['row']['id'] }}}' hx-target="#category-body"
+            hx-confirm="delete category {{ b['row']['name'] }}?">delete</button>
+  </div>
+</div>
+{% endmacro %}
+
+{% if error %}<p class="soft-error">{{ error }}</p>{% endif %}
+<p class="crumb">
+  <a class="quiet-link" href="/model/boards/{{ board['id'] }}">&larr; {{ board['name'] }}</a>
+  {% for a in trail %} / <a class="quiet-link" href="/model/categories/{{ a['id'] }}">{{ a['name'] }}</a>{% endfor %}
+</p>
+{{ catnode(node, 0) }}

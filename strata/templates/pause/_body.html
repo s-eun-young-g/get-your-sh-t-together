@@ -87,10 +87,5 @@
 {% endif %}
 
 {% if stats['let_go'] or stats['acted'] %}
-<p class="momentum">
-  waiting killed {{ stats['let_go'] }} impulse{{ '' if stats['let_go'] == 1 else 's' }} for free.
-  you acted on {{ stats['acted'] }}{% if stats['regretted'] or stats['no_regret'] %},
-  and of the {{ stats['regretted'] + stats['no_regret'] }} you scored,
-  {{ stats['no_regret'] }} {{ 'was' if stats['no_regret'] == 1 else 'were' }} worth it{% endif %}.
-</p>
+<p class="momentum">you waited out {{ stats['let_go'] }} impulse{{ '' if stats['let_go'] == 1 else 's' }}. you acted on {{ stats['acted'] }}.</p>
 {% endif %}

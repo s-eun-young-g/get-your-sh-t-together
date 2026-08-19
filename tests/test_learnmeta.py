@@ -153,3 +153,17 @@ def test_manifesto_composes_inline(client):
     client.post("/manifesto", data={"manifesto": "build the thing"})
     home = client.get("/").text
     assert "build the thing" in home and 'name="manifesto"' not in home
+
+
+def test_add_track_from_index(client, app_db):
+    r = client.post("/learn/tracks", data={"name": "pottery"})
+    assert "pottery" in r.text
+    assert app_db.execute(
+        "SELECT slug FROM tracks WHERE name = 'pottery'"
+    ).fetchone()["slug"] == "pottery"
+    client.post("/learn/tracks", data={"name": "pottery"})
+    slugs = sorted(
+        row["slug"]
+        for row in app_db.execute("SELECT slug FROM tracks WHERE name = 'pottery'").fetchall()
+    )
+    assert slugs == ["pottery", "pottery-2"]

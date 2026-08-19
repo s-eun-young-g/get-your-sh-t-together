@@ -2,7 +2,7 @@
 {% block title %}model - strata{% endblock %}
 {% block content %}
 <section class="card">
-  <h2>Boards</h2>
+  <h2>models</h2>
   <form class="add" hx-post="/model/boards" autocomplete="off">
     <input type="text" name="name" placeholder="what are you figuring out?" required>
   </form>
@@ -10,7 +10,7 @@
     {% for b in boards %}
     <li>
       <a href="/model/boards/{{ b['id'] }}" class="res-link">{{ b['name'] }}</a>
-      <span class="age">{{ b['bucket_count'] }} buckets</span>
+      <span class="age">{{ b['bucket_count'] }} categories</span>
       <span class="row-actions">
         <button class="quiet" hx-post="/model/boards/{{ b['id'] }}/archive"
                 hx-confirm="archive {{ b['name'] }}?">archive</button>

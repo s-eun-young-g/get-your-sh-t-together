@@ -95,6 +95,28 @@ def learn_page(request: Request, conn=Depends(get_conn)):
     return render(request, "learn/index.html", _index_ctx(conn))
 
 
+@router.post("/tracks")
+def add_track(request: Request, conn=Depends(get_conn), name: str = Form(...)):
+    from ..services.frontier import slugify
+
+    name = name.strip()
+    if name:
+        base = slugify(name)
+        slug, n = base, 1
+        while conn.execute("SELECT 1 FROM tracks WHERE slug = ?", (slug,)).fetchone():
+            n += 1
+            slug = f"{base}-{n}"
+        pos = conn.execute(
+            "SELECT COALESCE(MAX(position), -1) + 1 AS p FROM tracks"
+        ).fetchone()["p"]
+        with conn:
+            conn.execute(
+                "INSERT INTO tracks (slug, name, position) VALUES (?, ?, ?)",
+                (slug, name, pos),
+            )
+    return render(request, "learn/_index_body.html", _index_ctx(conn))
+
+
 @router.post("/log-today")
 def log_today(request: Request, conn=Depends(get_conn)):
     learnmeta.log_day(conn, "manual")
