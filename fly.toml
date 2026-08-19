@@ -1,24 +1,26 @@
-# fly.io config. `fly launch` will ask for a globally unique app name and
-# keep this file; the volume holds the SQLite database across deploys.
+# fly.toml app configuration file generated for strata-sofia on 2026-08-19T17:31:52-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-primary_region = "bos"
+app = 'strata-sofia'
+primary_region = 'ewr'
 
 [build]
-
 [env]
-  STRATA_DATA_DIR = "/data"
+  STRATA_DATA_DIR = '/data'
 
-[mounts]
-  source = "strata_data"
-  destination = "/data"
+[[mounts]]
+  source = 'strata_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8020
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
+  size = 'shared-cpu-1x'
+  memory = '256mb'
