@@ -251,6 +251,17 @@ def delete_task(
     return _frame_response(request, conn, frame)
 
 
+@router.post("/tasks/{task_id}/notes")
+def task_notes(
+    request: Request, task_id: int, conn=Depends(get_conn), notes: str = Form("")
+):
+    from fastapi.responses import Response
+
+    with conn:
+        conn.execute("UPDATE tasks SET notes = ? WHERE id = ?", (notes, task_id))
+    return Response(status_code=204)
+
+
 @router.post("/tasks/{task_id}/snooze")
 def snooze_task(
     request: Request,

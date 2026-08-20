@@ -386,6 +386,19 @@ def assignment_burden(
     return _body(request, conn)
 
 
+@router.post("/assignments/{assignment_id}/notes")
+def assignment_notes(
+    request: Request, assignment_id: int, conn=Depends(get_conn), notes: str = Form("")
+):
+    from fastapi.responses import Response
+
+    with conn:
+        conn.execute(
+            "UPDATE assignments SET notes = ? WHERE id = ?", (notes, assignment_id)
+        )
+    return Response(status_code=204)
+
+
 @router.post("/assignments/{assignment_id}/delete")
 def assignment_delete(request: Request, assignment_id: int, conn=Depends(get_conn)):
     with conn:

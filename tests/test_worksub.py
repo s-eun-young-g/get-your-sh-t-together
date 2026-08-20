@@ -147,3 +147,35 @@ def test_meeting_dates(client, app_db):
     assert "due tomorrow" in client.get("/work").text
     client.post(f"/work/agendas/{row['id']}/when", data={"when": "in 2w"})
     assert app_db.execute("SELECT when_at FROM agendas").fetchone()["when_at"] > row["when_at"]
+
+
+def test_task_notes_autosave(client, app_db):
+    client.post("/work/workspaces", data={"name": "consulting", "kind": "job"})
+    ws = app_db.execute("SELECT id FROM workspaces WHERE name = 'consulting'").fetchone()["id"]
+    client.post(
+        f"/work/workspaces/{ws}/tasks",
+        data={"title": "draft the memo", "due_date": "tomorrow", "effort_minutes": "30", "dread": "1"},
+    )
+    tid = app_db.execute("SELECT id FROM tasks WHERE title = 'draft the memo'").fetchone()["id"]
+    r = client.post(f"/now/tasks/{tid}/notes", data={"notes": "ask Dana for the numbers"})
+    assert r.status_code == 204
+    assert app_db.execute(
+        "SELECT notes FROM tasks WHERE id = ?", (tid,)
+    ).fetchone()["notes"] == "ask Dana for the numbers"
+    assert "ask Dana for the numbers" in client.get("/work").text
+
+
+def test_assignment_notes_autosave(client, app_db):
+    client.post("/work/workspaces", data={"name": "school", "kind": "school"})
+    sid = app_db.execute(
+        "SELECT id FROM workspaces WHERE name = 'school'"
+    ).fetchone()["id"]
+    client.post(f"/work/workspaces/{sid}/classes", data={"name": "bio"})
+    cid = app_db.execute("SELECT id FROM classes").fetchone()["id"]
+    client.post(f"/work/classes/{cid}/assignments", data={"title": "lab writeup", "due_date": "2030-01-05"})
+    aid = app_db.execute("SELECT id FROM assignments").fetchone()["id"]
+    r = client.post(f"/work/assignments/{aid}/notes", data={"notes": "cite the CRISPR paper"})
+    assert r.status_code == 204
+    assert app_db.execute(
+        "SELECT notes FROM assignments WHERE id = ?", (aid,)
+    ).fetchone()["notes"] == "cite the CRISPR paper"

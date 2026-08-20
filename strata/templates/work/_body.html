@@ -1,8 +1,20 @@
+{% macro noted_title(title, notes, post) %}
+<details class="node-more">
+  <summary class="item-title">{{ title }}
+    {% if notes %}<span class="age">notes</span>{% endif %}
+  </summary>
+  <div class="node-detail">
+    <textarea class="notes" placeholder="notes. they save themselves."
+              hx-post="{{ post }}" hx-trigger="keyup changed delay:800ms"
+              hx-swap="none">{{ notes }}</textarea>
+  </div>
+</details>
+{% endmacro %}
+
 {% macro trow(t) %}
 <li>
   <button class="tick" hx-post="/now/tasks/{{ t['id'] }}/done" hx-vals='{"frame":"work"}' hx-target="#work-body" aria-label="done"></button>
-  <span>{{ t['title'] }}</span>
-  {% if t['notes'] %}<span class="summary">{{ t['notes'] }}</span>{% endif %}
+  {{ noted_title(t['title'], t['notes'], "/now/tasks/" ~ t['id'] ~ "/notes") }}
   {% if t['burden_label'] %}<span class="chip chip-{{ t['burden'] }}">{{ t['burden_label'] }}</span>{% endif %}
   {% if t['start_early'] %}<span class="chip chip-early">start now</span>{% endif %}
   {% if t['due_label'] %}<span class="age">{{ t['due_label'] }}</span>{% endif %}
@@ -190,7 +202,7 @@
     {% for a in s['due_soon'] %}
     <li>
       <button class="tick" hx-post="/work/assignments/{{ a['id'] }}/done" hx-target="#work-body" aria-label="done"></button>
-      <span>{{ a['title'] }}</span>
+      {{ noted_title(a['title'], a['notes'], "/work/assignments/" ~ a['id'] ~ "/notes") }}
       <span class="chip chip-{{ a['burden'] }}">{{ a['burden_label'] }}</span>
       {% if a['start_early'] %}<span class="chip chip-early">start now</span>{% endif %}
       <span class="age">{{ a['class_name'] }}, {{ a['due_label'] }}</span>
@@ -215,7 +227,7 @@
       {% for a in c['assignments'] if not a['done_at'] %}
       <li>
         <button class="tick" hx-post="/work/assignments/{{ a['id'] }}/done" hx-target="#work-body" aria-label="done"></button>
-        <span>{{ a['title'] }}</span>
+        {{ noted_title(a['title'], a['notes'], "/work/assignments/" ~ a['id'] ~ "/notes") }}
         <span class="trio">
           {% for v, label in [('s','small'),('m','medium'),('l','big')] %}
           <button class="quiet {{ 'on' if a['burden'] == v }}" hx-post="/work/assignments/{{ a['id'] }}/burden"
