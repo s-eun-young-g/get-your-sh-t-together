@@ -16,7 +16,7 @@
     <form class="ws-name" hx-post="/work/workspaces/{{ ws['id'] }}/rename" hx-target="#work-body" autocomplete="off">
       <input type="text" name="name" value="{{ ws['name'] }}" aria-label="workspace name">
     </form>
-    <span>
+    <span class="row-actions">
       {% if ws['kind'] == 'school' and canvas_enabled %}
       <button class="quiet" hx-post="/work/canvas/sync" hx-target="#work-body"
               hx-indicator="#canvas-wait">sync from canvas</button>
@@ -84,7 +84,9 @@
     <summary>{{ a['row']['name'] }}
       {% if a['row']['when_at'] %}<span class="age">{{ a['due_label'] }}</span>{% endif %}
       <span class="badge">{{ a['items'] | length }}</span>
-      <button class="quiet danger" hx-post="/work/agendas/{{ a['row']['id'] }}/archive" hx-target="#work-body">archive</button>
+      <span class="row-actions">
+        <button class="quiet danger" hx-post="/work/agendas/{{ a['row']['id'] }}/archive" hx-target="#work-body">archive</button>
+      </span>
     </summary>
     <ul class="tasks">
       {% for i in a['items'] %}
@@ -203,9 +205,11 @@
   <details class="drawer">
     <summary>{{ c['row']['name'] }}
       <span class="badge">{{ c['assignments'] | rejectattr('done_at') | list | length }} open</span>
-      <button class="quiet" hx-post="/work/classes/{{ c['row']['id'] }}/visibility" hx-target="#work-body">hide</button>
-      <button class="quiet danger" hx-post="/work/classes/{{ c['row']['id'] }}/archive" hx-target="#work-body"
-              hx-confirm="archive {{ c['row']['name'] }}?">archive</button>
+      <span class="row-actions">
+        <button class="quiet" hx-post="/work/classes/{{ c['row']['id'] }}/visibility" hx-target="#work-body">hide</button>
+        <button class="quiet danger" hx-post="/work/classes/{{ c['row']['id'] }}/archive" hx-target="#work-body"
+                hx-confirm="archive {{ c['row']['name'] }}?">archive</button>
+      </span>
     </summary>
     <ul class="tasks">
       {% for a in c['assignments'] if not a['done_at'] %}

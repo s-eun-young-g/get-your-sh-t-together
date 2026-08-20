@@ -38,8 +38,10 @@
   {% for t in templates %}
   <details class="drawer">
     <summary>{{ t['row']['name'] }} <span class="badge">{{ t['items'] | length }}</span>
-      <button class="quiet danger" hx-post="/pack/templates/{{ t['row']['id'] }}/delete" hx-target="#pack-body"
-              hx-confirm="delete {{ t['row']['name'] }}? past {{ noun }}s keep their lists.">delete</button>
+      <span class="row-actions">
+        <button class="quiet danger" hx-post="/pack/templates/{{ t['row']['id'] }}/delete" hx-target="#pack-body"
+                hx-confirm="delete {{ t['row']['name'] }}? past {{ noun }}s keep their lists.">delete</button>
+      </span>
     </summary>
     <ul class="tasks">
       {% for i in t['items'] %}

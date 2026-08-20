@@ -1,6 +1,6 @@
 {% if prefs.get('mod_routines', '1') == '1' %}
 <section class="card">
-  <div class="row spread"><h2>routines</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_routines","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></div>
+  <div class="row spread"><h2>routines</h2><span class="row-actions"><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_routines","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></span></div>
   {% if routines %}
   <ul class="tasks">
     {% for r in routines %}
@@ -45,7 +45,7 @@
 
 {% if prefs.get('mod_finance', '1') == '1' %}
 <section class="card">
-  <div class="row spread"><h2>financials</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_finance","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></div>
+  <div class="row spread"><h2>financials</h2><span class="row-actions"><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_finance","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></span></div>
 
   {% if monthly_load_label %}
   <p class="summary">recurring load: about {{ monthly_load_label }}/mo</p>
@@ -178,7 +178,7 @@
 
 {% if prefs.get('mod_appointments', '1') == '1' %}
 <section class="card">
-  <div class="row spread"><h2>appointments</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_appointments","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></div>
+  <div class="row spread"><h2>appointments</h2><span class="row-actions"><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_appointments","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></span></div>
   {% if appointments['needs_booking'] %}
   <ul class="tasks">
     {% for a in appointments['needs_booking'] %}
@@ -228,7 +228,7 @@
 
 {% if prefs.get('mod_meals', '1') == '1' %}
 <section class="card">
-  <div class="row spread"><h2>groceries</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_meals","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></div>
+  <div class="row spread"><h2>groceries</h2><span class="row-actions"><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_meals","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></span></div>
   {% if grocery_runs %}
   <ul class="plain">
     {% for tr in grocery_runs %}
@@ -245,7 +245,7 @@
 
 {% if prefs.get('mod_evenings', '1') == '1' %}
 <section class="card">
-  <div class="row spread"><h2>evening plan</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_evenings","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></div>
+  <div class="row spread"><h2>evening plan</h2><span class="row-actions"><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_evenings","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></span></div>
   {% if plan %}
   <div class="row spread">
     <h1>{{ plan['name'] }}</h1>
@@ -314,7 +314,7 @@
 
 {% if prefs.get('mod_packing', '1') == '1' %}
 <section class="card">
-  <div class="row spread"><h2>packing</h2><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_packing","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></div>
+  <div class="row spread"><h2>packing</h2><span class="row-actions"><button class="quiet danger" hx-post="/life/sections" hx-vals='{"key":"mod_packing","on":0}' hx-target="#life-body" hx-confirm="remove this section? its data is kept and it can be added back.">remove</button></span></div>
   {% if trips %}
   <ul class="plain">
     {% for tr in trips %}

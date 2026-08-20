@@ -222,13 +222,12 @@ details.drawer summary .subline {
 }
 .col.ghost { background: radial-gradient(160% 80% at 8% 0%, color-mix(in srgb, var(--page-hue) 6%, transparent), transparent 60%); }
 
-/* nested buckets on model boards; em sizing compounds per level */
+/* nested buckets on model boards; em sizing compounds per level.
+   no box of their own, just indent and shrink. */
 .bucket { font-size: 0.95rem; }
 .bucket .bucket {
-  margin: 0.9rem 0 0 0.9rem;
-  padding: 0.6rem 0 0.5rem 0.7rem;
+  margin: 0.8rem 0 0 0.9rem;
   font-size: 0.94em;
-  background: color-mix(in srgb, var(--page-hue) 5%, transparent);
 }
 .col h2 { color: var(--muted); font-size: 0.72rem; }
 .columns.pipeline { gap: 1.6rem; }
@@ -242,7 +241,23 @@ details.drawer summary .subline {
 ul.cards.bullets { list-style: disc; padding-left: 1.05rem; font-size: 0.88rem; }
 ul.cards.bullets li { display: list-item; padding: 0.25rem 0; }
 ul.cards.bullets li::marker { color: var(--muted); }
-ul.cards.bullets li .row-actions { margin-left: 0.6rem; }
+ul.cards.bullets li .row-actions { margin-left: 0.6rem; display: inline-flex; }
+details.move { display: inline-block; }
+details.move summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+details.move summary::-webkit-details-marker { display: none; }
+details.move .move-targets {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  margin: 0.2rem 0 0.3rem;
+}
 .cat-title {
   display: inline-block;
   font-size: 1.02em;
@@ -492,9 +507,23 @@ form.inline { display: inline; }
 .row.actions { margin-top: 0.55rem; gap: 1.1rem; }
 .row-actions { margin-left: auto; display: flex; gap: 0.7rem; align-items: center; }
 @media (hover: hover) {
-  ul.tasks li .row-actions { opacity: 0; transition: opacity 0.12s ease; }
-  ul.tasks li:hover .row-actions, ul.tasks li:focus-within .row-actions { opacity: 1; }
+  ul.tasks li .row-actions,
+  ul.cards li .row-actions,
+  .row.spread .row-actions,
+  h3 .row-actions,
+  details.drawer summary .row-actions,
+  .bucket-actions .danger { opacity: 0; transition: opacity 0.12s ease; }
+  ul.tasks li:hover .row-actions, ul.tasks li:focus-within .row-actions,
+  ul.cards li:hover .row-actions, ul.cards li:focus-within .row-actions,
+  .row.spread:hover .row-actions, .row.spread:focus-within .row-actions,
+  h3:hover .row-actions, h3:focus-within .row-actions,
+  details.drawer summary:hover .row-actions,
+  details.drawer summary:focus-within .row-actions,
+  .bucket:hover .bucket-actions .danger,
+  .tile-card:hover .bucket-actions .danger,
+  .bucket-actions:focus-within .danger { opacity: 1; }
 }
+h3:has(> .row-actions) { display: flex; align-items: baseline; gap: 0.55rem; }
 
 details.more summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; }
 .chk-row { display: flex; flex-wrap: wrap; gap: 0.35rem 1.2rem; margin: 0.45rem 0; }
@@ -748,7 +777,7 @@ label.field {
   .columns.grid3 { grid-template-columns: 1fr; }
   .col { min-width: 0; width: 100%; }
   .top { flex-wrap: wrap; gap: 0.5rem 1rem; padding-left: 1.25rem; padding-right: 1.25rem; }
-  ul.tasks li .row-actions { opacity: 1; }
+  .row-actions, .bucket-actions .danger { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

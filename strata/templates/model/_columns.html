@@ -4,12 +4,19 @@
   <li>
     <span>{{ c['title'] }}</span>
     <span class="row-actions">
-      {% for other in flat %}
-      {% if other['id'] != b['row']['id'] %}
-      <button class="quiet" hx-post="/model/cards/{{ c['id'] }}/move"
-              hx-vals='{"bucket_id": {{ other['id'] }}}' hx-target="#columns">to {{ other['path'] | lower }}</button>
+      {% if flat | length > 1 %}
+      <details class="move">
+        <summary>move</summary>
+        <span class="move-targets">
+          {% for other in flat %}
+          {% if other['id'] != b['row']['id'] %}
+          <button class="quiet" hx-post="/model/cards/{{ c['id'] }}/move"
+                  hx-vals='{"bucket_id": {{ other['id'] }}}' hx-target="#columns">to {{ other['path'] | lower }}</button>
+          {% endif %}
+          {% endfor %}
+        </span>
+      </details>
       {% endif %}
-      {% endfor %}
       <button class="quiet danger" hx-post="/model/cards/{{ c['id'] }}/delete" hx-target="#columns">drop</button>
     </span>
   </li>
