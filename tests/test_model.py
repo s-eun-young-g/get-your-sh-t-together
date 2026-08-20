@@ -134,3 +134,18 @@ def test_board_delete_from_index(client, app_db):
     assert app_db.execute("SELECT COUNT(*) AS n FROM boards").fetchone()["n"] == 0
     html = client.get("/model").text
     assert "archive" in html or "boards" in html
+
+
+def test_card_link_hyperlinks_the_title(client, app_db):
+    board, (take, _) = _board(client, app_db)
+    client.post(f"/model/buckets/{take}/cards", data={"title": "insurance quotes"})
+    card = app_db.execute("SELECT id FROM cards").fetchone()["id"]
+    client.post(f"/model/cards/{card}/link", data={"url": "example.com/quotes"})
+    row = app_db.execute("SELECT url FROM cards").fetchone()
+    assert row["url"] == "https://example.com/quotes"  # scheme added for bare domains
+    html = client.get(f"/model/boards/{board}").text
+    assert 'href="https://example.com/quotes"' in html
+    assert ">insurance quotes</a>" in html
+    client.post(f"/model/cards/{card}/link", data={"url": ""})
+    html = client.get(f"/model/boards/{board}").text
+    assert ">insurance quotes</span>" in html  # back to plain text

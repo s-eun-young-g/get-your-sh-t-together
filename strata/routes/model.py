@@ -215,12 +215,20 @@ def delete_bucket(
     return _render_model(request, conn, board_id, view_bucket, error=error)
 
 
+def _clean_url(raw: str) -> str:
+    raw = raw.strip()
+    if raw and not raw.startswith(("http://", "https://")):
+        raw = "https://" + raw
+    return raw
+
+
 @router.post("/buckets/{bucket_id}/cards")
 def add_card(
     request: Request,
     bucket_id: int,
     conn=Depends(get_conn),
     title: str = Form(...),
+    url: str = Form(""),
     view_bucket: int = Form(0),
 ):
     b = conn.execute("SELECT board_id FROM buckets WHERE id = ?", (bucket_id,)).fetchone()
@@ -232,10 +240,27 @@ def add_card(
         ).fetchone()["p"]
         with conn:
             conn.execute(
-                "INSERT INTO cards (bucket_id, title, position) VALUES (?, ?, ?)",
-                (bucket_id, title, pos),
+                "INSERT INTO cards (bucket_id, title, position, url) VALUES (?, ?, ?, ?)",
+                (bucket_id, title, pos, _clean_url(url)),
             )
     return _render_model(request, conn, b["board_id"], view_bucket)
+
+
+@router.post("/cards/{card_id}/link")
+def set_card_link(
+    request: Request,
+    card_id: int,
+    conn=Depends(get_conn),
+    url: str = Form(""),
+    view_bucket: int = Form(0),
+):
+    row = conn.execute(
+        "SELECT b.board_id FROM cards c JOIN buckets b ON b.id = c.bucket_id WHERE c.id = ?",
+        (card_id,),
+    ).fetchone()
+    with conn:
+        conn.execute("UPDATE cards SET url = ? WHERE id = ?", (_clean_url(url), card_id))
+    return _render_model(request, conn, row["board_id"], view_bucket)
 
 
 @router.post("/cards/{card_id}/move")

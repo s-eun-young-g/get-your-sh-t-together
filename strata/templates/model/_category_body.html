@@ -2,8 +2,16 @@
 <ul class="cards bullets">
   {% for c in b['cards'] %}
   <li>
-    <span>{{ c['title'] }}</span>
+    {% if c['url'] %}<a class="res-link" href="{{ c['url'] }}" target="_blank" rel="noopener">{{ c['title'] }}</a>
+    {% else %}<span>{{ c['title'] }}</span>{% endif %}
     <span class="row-actions">
+      <details class="move">
+        <summary>link</summary>
+        <form class="add move-targets" hx-post="/model/cards/{{ c['id'] }}/link"
+              hx-vals='{"view_bucket": {{ node['row']['id'] }}}' hx-target="#category-body" autocomplete="off">
+          <input type="text" name="url" value="{{ c['url'] }}" placeholder="paste a link, empty removes it">
+        </form>
+      </details>
       {% if flat | length > 1 %}
       <details class="move">
         <summary>move</summary>
@@ -12,7 +20,7 @@
           {% if other['id'] != b['row']['id'] %}
           <button class="quiet" hx-post="/model/cards/{{ c['id'] }}/move"
                   hx-vals='{"bucket_id": {{ other['id'] }}, "view_bucket": {{ node['row']['id'] }}}'
-                  hx-target="#category-body">to {{ other['path'] | lower }}</button>
+                  hx-target="#category-body">to {{ other['path'] }}</button>
           {% endif %}
           {% endfor %}
         </span>

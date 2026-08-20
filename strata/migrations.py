@@ -558,4 +558,11 @@ MIGRATIONS: list[tuple[int, str]] = [
           CHECK (usage IN ('daily','occasion','dead'));
         """,
     ),
+    (
+        27,
+        """
+        -- A model card can carry a link; the title becomes the hyperlink.
+        ALTER TABLE cards ADD COLUMN url TEXT NOT NULL DEFAULT '';
+        """,
+    ),
 ]
