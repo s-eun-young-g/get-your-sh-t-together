@@ -29,7 +29,7 @@
         <span class="chk">split categories by</span>
         <span class="seg">
           {% for c in d['columns'][1:] %}
-          <label><input type="radio" name="group_col" value="{{ c }}" {{ 'checked' if c == d['suggested'] }}><span>{{ c | lower }}</span></label>
+          <label><input type="radio" name="group_col" value="{{ c }}" {{ 'checked' if c == d['suggested'] }}><span>{{ c }}</span></label>
           {% endfor %}
         </span>
         <button type="submit" class="quiet">make a model</button>

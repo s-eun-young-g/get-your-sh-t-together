@@ -6,7 +6,7 @@
     <button hx-post="/now/tasks/{{ task['id'] }}/move" hx-vals='{"horizon":"today","frame":"sort"}' hx-target="#sort">today</button>
     <button class="quiet" hx-post="/now/tasks/{{ task['id'] }}/nuisance" hx-vals='{"frame":"sort"}' hx-target="#sort">frog</button>
     {% for w in workspaces %}
-    <button class="quiet" hx-post="/now/tasks/{{ task['id'] }}/sort_tag" hx-vals='{"workspace_id": {{ w['id'] }}}' hx-target="#sort">{{ w['name'] | lower }}</button>
+    <button class="quiet" hx-post="/now/tasks/{{ task['id'] }}/sort_tag" hx-vals='{"workspace_id": {{ w['id'] }}}' hx-target="#sort">{{ w['name'] }}</button>
     {% endfor %}
     <button class="quiet" hx-post="/now/tasks/{{ task['id'] }}/skip" hx-target="#sort">skip</button>
     <button class="quiet danger" hx-post="/now/tasks/{{ task['id'] }}/delete" hx-vals='{"frame":"sort"}' hx-target="#sort">drop</button>

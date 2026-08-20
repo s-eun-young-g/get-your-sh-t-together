@@ -11,7 +11,7 @@ def test_rename_workspace_flows_to_board(client, app_db):
     client.post(f"/work/workspaces/{ws}/rename", data={"name": "Sedona"})
     assert 'value="Sedona"' in client.get("/work").text
     client.post("/capture", data={"title": "email board deck"})
-    assert ">sedona</button>" in client.get("/now/sort").text
+    assert ">Sedona</button>" in client.get("/now/sort").text
 
 
 def test_multiple_jobs_each_get_a_section(client, app_db):
@@ -37,7 +37,7 @@ def test_archive_workspace_keeps_tasks(client, app_db):
 
 def test_name_greeting(client):
     client.post("/settings", data={"name": "Sofia"} | LIFE_ON)
-    assert "hi sofia" in client.get("/").text
+    assert "hi Sofia" in client.get("/").text
 
 
 def test_life_toggles_hide_sections_and_nav(client):

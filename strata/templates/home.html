@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block capture %}
-{% if prefs.get('name') %}<p class="greeting">hi {{ prefs['name'] | lower }}</p>{% endif %}
+{% if prefs.get('name') %}<p class="greeting">hi {{ prefs['name'] }}</p>{% endif %}
 <div class="capture-slot">{% with capture_autofocus = true, capture_from_home = true %}{% include "_capture.html" %}{% endwith %}</div>
 {% endblock %}
 {% block content %}

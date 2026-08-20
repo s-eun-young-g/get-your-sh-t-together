@@ -70,11 +70,8 @@ main {
   letter-spacing: -0.015em;
 }
 
-/* interface copy runs lowercase; user content is never transformed */
-h1, .chip, .tile-big,
-details summary, .greeting, .headliner .chip {
-  text-transform: lowercase;
-}
+/* interface copy is written lowercase in the templates themselves;
+   nothing is transformed, so user entries keep their capitals */
 
 /* header */
 .top {
@@ -113,14 +110,12 @@ h2 {
   font-size: 1.1rem;
   font-weight: 650;
   margin: 0 0 0.85rem;
-  text-transform: lowercase;
   letter-spacing: -0.015em;
   color: color-mix(in srgb, var(--page-hue) 75%, black);
 }
 h3 {
   font-size: 0.95rem;
   font-weight: 600;
-  text-transform: lowercase;
   letter-spacing: -0.01em;
   color: color-mix(in srgb, var(--page-hue) 55%, var(--muted));
   margin: 1.8rem 0 0.55rem;
@@ -165,7 +160,6 @@ details.drawer summary {
   color: color-mix(in srgb, var(--page-hue) 75%, black);
   font-size: 1.1rem;
   font-weight: 650;
-  text-transform: lowercase;
   letter-spacing: -0.015em;
   display: flex;
   align-items: center;

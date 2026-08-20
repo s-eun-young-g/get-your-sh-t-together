@@ -27,7 +27,7 @@
     <li>
       <button class="tick" hx-post="{{ i['post'] }}" hx-vals='{"frame":"home"}' hx-target="#home-blocks" aria-label="done"></button>
       <span>{{ i['title'] }}</span>
-      <span class="chip chip-hue-{{ i['hue'] }}">{{ i['chip'] | lower }}</span>
+      <span class="chip chip-hue-{{ i['hue'] }}">{{ i['chip'] }}</span>
       {% if i['meta'] %}<span class="age">{{ i['meta'] }}</span>{% endif %}
     </li>
     {% endfor %}
